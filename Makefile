@@ -1,5 +1,6 @@
 DIRS := barrier mcs-lock mpmc-queue spsc-queue spsc-bugfix linuxrwlocks \
-	dekker-fences chase-lev-deque ms-queue chase-lev-deque-bugfix seqlock
+	dekker-fences chase-lev-deque ms-queue chase-lev-deque-bugfix seqlock \
+	cliffc-hashtable
 
 .PHONY: $(DIRS)
 

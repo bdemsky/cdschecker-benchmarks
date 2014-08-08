@@ -7,3 +7,19 @@
 
 # files in this directory
 /tags
+
+barrier/barrier
+chase-lev-deque-bugfix/main
+cliffc-hashtable/table
+cliffc-hashtable/table-normal
+dekker-fences/dekker-fences
+linuxrwlocks/linuxrwlocks
+mcs-lock/mcs-lock
+mpmc-queue/mpmc-2r1w-noinit
+mpmc-queue/mpmc-rdwr-noinit
+mpmc-queue/mpmc-1r2w
+mpmc-queue/mpmc-queue
+mpmc-queue/mpmc-1r2w-noinit
+mpmc-queue/mpmc-queue-noinit
+mpmc-queue/mpmc-2r1w
+mpmc-queue/mpmc-queue-rdwr
