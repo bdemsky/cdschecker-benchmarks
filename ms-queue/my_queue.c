@@ -120,9 +120,8 @@ void enqueue(queue_t *q, unsigned int val)
 			release, release);
 }
 
-unsigned int dequeue(queue_t *q)
+bool dequeue(queue_t *q, unsigned int *retVal)
 {
-	unsigned int value;
 	int success = 0;
 	pointer head;
 	pointer tail;
@@ -139,7 +138,7 @@ unsigned int dequeue(queue_t *q)
 				MODEL_ASSERT(get_ptr(next) != POISON_IDX);
 
 				if (get_ptr(next) == 0) { // NULL
-					return 0; // NULL
+					return false; // NULL
 				}
 				atomic_compare_exchange_strong_explicit(&q->tail,
 						&tail,
@@ -147,7 +146,7 @@ unsigned int dequeue(queue_t *q)
 						release, release);
 				thrd_yield();
 			} else {
-				value = load_32(&q->nodes[get_ptr(next)].value);
+				*retVal = load_32(&q->nodes[get_ptr(next)].value);
 				success = atomic_compare_exchange_strong_explicit(&q->head,
 						&head,
 						MAKE_POINTER(get_ptr(next), get_count(head) + 1),
@@ -158,5 +157,5 @@ unsigned int dequeue(queue_t *q)
 		}
 	}
 	reclaim(get_ptr(head));
-	return value;
+	return true;
 }

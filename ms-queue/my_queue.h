@@ -27,5 +27,5 @@ typedef struct {
 
 void init_queue(queue_t *q, int num_threads);
 void enqueue(queue_t *q, unsigned int val);
-unsigned int dequeue(queue_t *q);
+bool dequeue(queue_t *q, unsigned int *retVal);
 int get_thread_num();

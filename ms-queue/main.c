@@ -23,19 +23,21 @@ int get_thread_num()
 	return -1;
 }
 
+bool succ1, succ2;
+
 static void main_task(void *param)
 {
 	unsigned int val;
 	int pid = *((int *)param);
-
 	if (!pid) {
 		input[0] = 17;
 		enqueue(queue, input[0]);
-		output[0] = dequeue(queue);
+		succ1 = dequeue(queue, &output[0]);
+		//printf("Dequeue: %d\n", output[0]);
 	} else {
 		input[1] = 37;
 		enqueue(queue, input[1]);
-		output[1] = dequeue(queue);
+		succ2 = dequeue(queue, &output[1]);
 	}
 }
 
@@ -70,7 +72,10 @@ int user_main(int argc, char **argv)
 		printf("input[%d] = %u\n", i, input[i]);
 	for (i = 0; i < num_threads; i++)
 		printf("output[%d] = %u\n", i, output[i]);
-	MODEL_ASSERT(in_sum == out_sum);
+	if (succ1 && succ2)
+		MODEL_ASSERT(in_sum == out_sum);
+	else
+		MODEL_ASSERT (false);
 
 	free(param);
 	free(threads);
