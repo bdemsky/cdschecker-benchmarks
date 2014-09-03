@@ -1,104 +1,105 @@
 #include <iostream>
-
+#include <threads.h>
 #include "cliffc_hashtable.h"
 
-#ifndef NORMAL
-#include "threads.h"
-#endif
+using namespace std;
 
-template<typename TypeK, typename TypeV, class Hash, class KeyEqualsTo, class ValEqualsTo>
-slot* const cliffc_hashtable<TypeK, TypeV, Hash, KeyEqualsTo, ValEqualsTo>::MATCH_ANY = new slot(false, NULL);
+template<typename TypeK, typename TypeV>
+slot* const cliffc_hashtable<TypeK, TypeV>::MATCH_ANY = new slot(false, NULL);
 
-template<typename TypeK, typename TypeV, class Hash, class KeyEqualsTo, class ValEqualsTo>
-slot* const cliffc_hashtable<TypeK, TypeV, Hash, KeyEqualsTo, ValEqualsTo>::NO_MATCH_OLD = new slot(false, NULL);
+template<typename TypeK, typename TypeV>
+slot* const cliffc_hashtable<TypeK, TypeV>::NO_MATCH_OLD = new slot(false, NULL);
 
-template<typename TypeK, typename TypeV, class Hash, class KeyEqualsTo, class ValEqualsTo>
-slot* const cliffc_hashtable<TypeK, TypeV, Hash, KeyEqualsTo, ValEqualsTo>::TOMBPRIME = new slot(true, NULL);
+template<typename TypeK, typename TypeV>
+slot* const cliffc_hashtable<TypeK, TypeV>::TOMBPRIME = new slot(true, NULL);
 
-template<typename TypeK, typename TypeV, class Hash, class KeyEqualsTo, class ValEqualsTo>
-slot* const cliffc_hashtable<TypeK, TypeV, Hash, KeyEqualsTo, ValEqualsTo>::TOMBSTONE = new slot(false, NULL);
+template<typename TypeK, typename TypeV>
+slot* const cliffc_hashtable<TypeK, TypeV>::TOMBSTONE = new slot(false, NULL);
 
-template<typename TypeK, typename TypeV, class Hash, class KeyEqualsTo, class ValEqualsTo>
-Hash cliffc_hashtable<TypeK, TypeV, Hash, KeyEqualsTo, ValEqualsTo>::hashFunc;
 
-template<typename TypeK, typename TypeV, class Hash, class KeyEqualsTo, class ValEqualsTo>
-KeyEqualsTo cliffc_hashtable<TypeK, TypeV, Hash, KeyEqualsTo, ValEqualsTo>::keyEqualsTo;
+class IntWrapper {
+	private:
+		public:
+	    int _val;
 
-template<typename TypeK, typename TypeV, class Hash, class KeyEqualsTo, class ValEqualsTo>
-ValEqualsTo cliffc_hashtable<TypeK, TypeV, Hash, KeyEqualsTo, ValEqualsTo>::valEqualsTo;
+		IntWrapper(int val) : _val(val) {}
 
-class HashInt {
-	public:
-	int operator()(const int &val) const {
-		return val;
-	}
+		IntWrapper() : _val(0) {}
+
+		IntWrapper(IntWrapper& copy) : _val(copy._val) {}
+
+		int get() {
+			return _val;
+		}
+
+		int hashCode() {
+			return _val;
+		}
+		
+		bool operator==(const IntWrapper& rhs) {
+			return false;
+		}
+
+		bool equals(const void *another) {
+			if (another == NULL)
+				return false;
+			IntWrapper *ptr =
+				(IntWrapper*) another;
+			return ptr->_val == _val;
+		}
 };
 
-class EqualsToInt {
-	public:
-	bool operator()(const int &val1, const int &val2) const {
-		return val1 == val2;
-	}
-};
-
-int *k1, *k2, *v1, *v2;
-cliffc_hashtable<int, int, HashInt, EqualsToInt, EqualsToInt> *table;
+cliffc_hashtable<IntWrapper, IntWrapper> *table;
+IntWrapper *val1, *val2;
+IntWrapper *k0, *k1, *k2, *k3, *k4, *k5;
+IntWrapper *v0, *v1, *v2, *v3, *v4, *v5;
 
 void threadA(void *arg) {
-	table->put(*k1, *v1);
-	int *r1 = table->get(*k2);
-	if (r1) {
-		printf("r1=%d\n", *r1);
-	} else {
-		printf("r1=NULL\n");
-	}
+	IntWrapper *Res;
+	int res;
+	Res = table->put(k3, v3);
+	res = Res == NULL ? 0 : Res->_val;
+	printf("Put1: key_%d, val_%d, res_%d\n", k3->_val, v3->_val, res);
+
+	Res = table->get(k2);
+	res = Res == NULL ? 0 : Res->_val;
+	printf("Get2: key_%d, res_%d\n", k2->_val, res);
 }
 
 void threadB(void *arg) {
-	table->put(*k2, *v2);
-	int *r2 = table->get(*k1);
-	if (r2) {
-		printf("r2=%d\n", *r2);
-	} else {
-		printf("r2=NULL\n");
-	}
+	IntWrapper *Res;
+	int res;
+	Res = table->put(k2, v2);
+	res = Res == NULL ? 0 : Res->_val;
+	printf("Put3: key_%d, val_%d, res_%d\n", k2->_val, v2->_val, res);
+
+	Res = table->get(k3);
+	res = Res == NULL ? 0 : Res->_val;
+	printf("Get4: key_%d, res_%d\n", k3->_val, res);
 }
 
-
-#ifdef NORMAL
-int main(int argc, char *argv[]) {
-	table = new cliffc_hashtable<int, int, HashInt, EqualsToInt, EqualsToInt>();
-	k1 = new int(3);
-	k2 = new int(4);
-	v1 = new int(1);
-	v2 = new int(2);
-	
-	table->put(*k1, *v1);
-	table->put(*k2, *v2);
-	int *r1 = table->get(*k2);
-	if (r1) {
-		printf("r1=%d\n", *r1);
-	} else {
-		printf("r1=NULL\n");
-	}
-
-	return 0;
-}
-#else
 int user_main(int argc, char *argv[]) {
-	table = new cliffc_hashtable<int, int, HashInt, EqualsToInt, EqualsToInt>();
-	k1 = new int(3);
-	k2 = new int(4);
-	v1 = new int(1);
-	v2 = new int(2);
+	thrd_t t1, t2;
+	table = new cliffc_hashtable<IntWrapper, IntWrapper>(32);
+    k1 = new IntWrapper(3);
+	k2 = new IntWrapper(5);
+	k3 = new IntWrapper(11);
+	k4 = new IntWrapper(7);
+	k5 = new IntWrapper(13);
 
-	thrd_t A, B, C;
-	thrd_create(&A, &threadA, NULL);
-	thrd_create(&B, &threadB, NULL);
+	v0 = new IntWrapper(2048);
+	v1 = new IntWrapper(1024);
+	v2 = new IntWrapper(47);
+	v3 = new IntWrapper(73);
+	v4 = new IntWrapper(81);
+	v5 = new IntWrapper(99);
 
-	thrd_join(A);
-	thrd_join(B);
-
+	thrd_create(&t1, threadA, NULL);
+	thrd_create(&t2, threadB, NULL);
+	thrd_join(t1);
+	thrd_join(t2);
+	
 	return 0;
 }
-#endif
+
+

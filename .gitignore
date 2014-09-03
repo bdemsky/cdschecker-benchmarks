@@ -23,3 +23,4 @@ mpmc-queue/mpmc-1r2w-noinit
 mpmc-queue/mpmc-queue-noinit
 mpmc-queue/mpmc-2r1w
 mpmc-queue/mpmc-queue-rdwr
+treiber-stack/main

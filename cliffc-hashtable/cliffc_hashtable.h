@@ -1,10 +1,17 @@
-#ifndef _CLIFFC_HASHTABLE_H
-#define _CLIFFC_HASHTABLE_H
+#ifndef CLIFFC_HASHTABLE_H
+#define CLIFFC_HASHTABLE_H
 
 #include <iostream>
 #include <atomic>
-#include <memory>
+#include "stdio.h" 
+//#include <common.h>
+#ifdef STANDALONE
 #include <assert.h>
+#define MODEL_ASSERT assert 
+#else
+#include <model-assert.h>
+#endif
+#include <stdlib.h>
 
 using namespace std;
 
@@ -15,7 +22,7 @@ using namespace std;
 	the static fields.
 */
 
-template<typename TypeK, typename TypeV, class Hash, class KeyEqualsTo, class ValEqualsTo>
+template<typename TypeK, typename TypeV>
 class cliffc_hashtable;
 
 /**
@@ -29,7 +36,7 @@ struct kvs_data {
 	
 	kvs_data(int sz) {
 		_size = sz;
-		int real_size = sizeof(atomic<void*>) * 2 + 2;
+		int real_size = sz * 2 + 2;
 		_data = new atomic<void*>[real_size];
 		// The control block should be initialized in resize()
 		// Init the hash record array
@@ -38,14 +45,11 @@ struct kvs_data {
 		for (i = 0; i < _size; i++) {
 			hashes[i] = 0;
 		}
-		
-		// Initialize the array
-		_data[0].store(NULL, memory_order_relaxed);
-		_data[1].store(hashes, memory_order_relaxed);
 		// Init the data to Null slot
 		for (i = 2; i < real_size; i++) {
 			_data[i].store(NULL, memory_order_relaxed);
 		}
+		_data[1].store(hashes, memory_order_relaxed);
 	}
 
 	~kvs_data() {
@@ -63,14 +67,21 @@ struct slot {
 		_prime = prime;
 		_ptr = ptr;
 	}
-
 };
 
 
 /**
+	TypeK must have defined function "int hashCode()" which return the hash
+	code for the its object, and "int equals(TypeK anotherKey)" which is
+	used to judge equality.
 	TypeK and TypeV should define their own copy constructor.
 */
-template<typename TypeK, typename TypeV, class Hash, class KeyEqualsTo, class ValEqualsTo>
+/**
+	@Begin
+	@Class_begin
+	@End
+*/
+template<typename TypeK, typename TypeV>
 class cliffc_hashtable {
 	/**
 		# The synchronization we have for the hashtable gives us the property of
@@ -78,50 +89,66 @@ class cliffc_hashtable {
 		# correctness. The key thing is to identify all the commit point.
 	
 		@Begin
+		@Options:
+			LANG = CPP;
+			CLASS = cliffc_hashtable;
 		@Global_define:
+			@DeclareVar:
+			spec_table *map;
+			spec_table *id_map;
+			id_tag_t *tag;
+			@InitVar:
+				map = new_spec_table_default(equals_key);
+				id_map = new_spec_table_default(equals_id);
+				tag = new_id_tag();
 
-			spec_hashtable<TypeK, TypeV*> __map;
-			spec_hashtable<TypeK, Tag> __id_map;
-			Tag __tag;
-
-			static bool _val_equals(TypeV *ptr1, TypeV *ptr2) {
-				// ...
+			@DefineFunc:
+			bool equals_key(void *ptr1, void *ptr2) {
+				TypeK *key1 = (TypeK*) ptr1,
+					*key2 = (TypeK*) ptr2;
+				if (key1 == NULL || key2 == NULL)
+					return false;
+				return key1->equals(key2);
 			}
 			
+			@DefineFunc:
+			bool equals_val(void *ptr1, void *ptr2) {
+				if (ptr1 == ptr2)
+					return true;
+				TypeV *val1 = (TypeV*) ptr1,
+					*val2 = (TypeV*) ptr2;
+				if (val1 == NULL || val2 == NULL)
+					return false;
+				return val1->equals(val2);
+			}
+
+			@DefineFunc:
+			bool equals_id(void *ptr1, void *ptr2) {
+				id_tag_t *id1 = (id_tag_t*) ptr1,
+					*id2 = (id_tag_t*) ptr2;
+				if (id1 == NULL || id2 == NULL)
+					return false;
+				return (*id1).tag == (*id2).tag;
+			}
+
+			@DefineFunc:
 			# Update the tag for the current key slot if the corresponding tag
 			# is NULL, otherwise just return that tag. It will update the next
 			# available tag too if it requires a new tag for that key slot.
-			static Tag _getKeyTag(TypeK &key) {
-				if (__id_map.get(key) == NULL) {
-					Tag cur_tag = tag.current();
-					__id_map.put(key, cur_tag);
-					__tag.next();
-					return cur_tag;
+			call_id_t getKeyTag(TypeK *key) {
+				if (!spec_table_contains(id_map, key)) {
+					call_id_t cur_id = current(tag);
+					spec_table_put(id_map, key, (void*) cur_id);
+					next(tag);
+					return cur_id;
 				} else {
-					return __id_map.get(key);
+					call_id_t res = (call_id_t) spec_table_get(id_map, key);
+					return res;
 				}
 			}
-		
-		@Interface_cluster:
-			Read_interface = {
-				Get,
-				PutIfAbsent,
-				RemoveAny,
-				RemoveIfMatch,
-				ReplaceAny,
-				ReplaceIfMatch
-			}
-			
-			Write_interface = {
-				Put,
-				PutIfAbsent(COND_PutIfAbsentSucc),
-				RemoveAny,
-				RemoveIfMatch(COND_RemoveIfMatchSucc),
-				ReplaceAny,
-				ReplaceIfMatch(COND_ReplaceIfMatchSucc)
-			}
 		@Happens_before:
-			Write_interface -> Read_interface
+			Put->Get
+			Put->Put
 		@End
 	*/
 
@@ -149,6 +176,7 @@ friend class CHM;
 	
 		public:
 		CHM(int size) {
+			_newkvs.store(NULL, memory_order_relaxed);
 			_size.store(size, memory_order_relaxed);
 			_slots.store(0, memory_order_relaxed);
 	
@@ -168,6 +196,8 @@ friend class CHM;
 		}
 	
 		kvs_data* resize(cliffc_hashtable *topmap, kvs_data *kvs) {
+			//model_print("resizing...\n");
+			/**** FIXME: miss ****/
 			kvs_data *newkvs = _newkvs.load(memory_order_acquire);
 			if (newkvs != NULL)
 				return newkvs;
@@ -190,24 +220,31 @@ friend class CHM;
 			if (newsz < oldlen) newsz = oldlen;
 	
 			// Last check cause the 'new' below is expensive
+			/**** FIXME: miss ****/
 			newkvs = _newkvs.load(memory_order_acquire);
+			//model_print("hey1\n");
 			if (newkvs != NULL) return newkvs;
 	
 			newkvs = new kvs_data(newsz);
 			void *chm = (void*) new CHM(sz);
+			//model_print("hey2\n");
 			newkvs->_data[0].store(chm, memory_order_relaxed);
 	
 			kvs_data *cur_newkvs; 
 			// Another check after the slow allocation
+			/**** FIXME: miss ****/
 			if ((cur_newkvs = _newkvs.load(memory_order_acquire)) != NULL)
 				return cur_newkvs;
 			// CAS the _newkvs to the allocated table
 			kvs_data *desired = (kvs_data*) NULL;
 			kvs_data *expected = (kvs_data*) newkvs; 
+			/**** FIXME: miss ****/
+			//model_print("release in resize!\n"); 
 			if (!_newkvs.compare_exchange_strong(desired, expected, memory_order_release,
-					memory_order_release)) {
+					memory_order_relaxed)) {
 				// Should clean the allocated area
 				delete newkvs;
+				/**** FIXME: miss ****/
 				newkvs = _newkvs.load(memory_order_acquire);
 			}
 			return newkvs;
@@ -215,7 +252,8 @@ friend class CHM;
 	
 		void help_copy_impl(cliffc_hashtable *topmap, kvs_data *oldkvs,
 			bool copy_all) {
-			assert (get_chm(oldkvs) == this);
+			MODEL_ASSERT (get_chm(oldkvs) == this);
+			/**** FIXME: miss ****/
 			kvs_data *newkvs = _newkvs.load(memory_order_acquire);
 			int oldlen = oldkvs->_size;
 			int min_copy_work = oldlen > 1024 ? 1024 : oldlen;
@@ -223,13 +261,13 @@ friend class CHM;
 			// Just follow Cliff Click's code here
 			int panic_start = -1;
 			int copyidx;
-			while (_copy_done.load(memory_order_acquire) < oldlen) {
-				copyidx = _copy_idx.load(memory_order_acquire);
+			while (_copy_done.load(memory_order_relaxed) < oldlen) {
+				copyidx = _copy_idx.load(memory_order_relaxed);
 				if (panic_start == -1) { // No painc
-					copyidx = _copy_idx.load(memory_order_acquire);
+					copyidx = _copy_idx.load(memory_order_relaxed);
 					while (copyidx < (oldlen << 1) &&
 						!_copy_idx.compare_exchange_strong(copyidx, copyidx +
-							min_copy_work, memory_order_release, memory_order_release))
+							min_copy_work, memory_order_relaxed, memory_order_relaxed))
 						copyidx = _copy_idx.load(memory_order_relaxed);
 					if (!(copyidx < (oldlen << 1)))
 						panic_start = copyidx;
@@ -253,10 +291,10 @@ friend class CHM;
 	
 		kvs_data* copy_slot_and_check(cliffc_hashtable *topmap, kvs_data
 			*oldkvs, int idx, void *should_help) {
+			/**** FIXME: miss ****/
 			kvs_data *newkvs = _newkvs.load(memory_order_acquire);
 			// We're only here cause the caller saw a Prime
-			if (copy_slot(topmap, idx, oldkvs,
-				_newkvs.load(memory_order_relaxed)))
+			if (copy_slot(topmap, idx, oldkvs, newkvs))
 				copy_check_and_promote(topmap, oldkvs, 1); // Record the slot copied
 			return (should_help == NULL) ? newkvs : topmap->help_copy(newkvs);
 		}
@@ -276,10 +314,13 @@ friend class CHM;
 	
 			// Promote the new table to the current table
 			if (copyDone + workdone == oldlen &&
-				topmap->_kvs.load(memory_order_acquire) == oldkvs)
-				topmap->_kvs.compare_exchange_strong(oldkvs,
-					_newkvs.load(memory_order_relaxed), memory_order_release,
-					memory_order_release);
+				topmap->_kvs.load(memory_order_relaxed) == oldkvs) {
+				/**** FIXME: miss ****/
+				kvs_data *newkvs = _newkvs.load(memory_order_acquire);
+				/**** CDSChecker error ****/
+				topmap->_kvs.compare_exchange_strong(oldkvs, newkvs, memory_order_release,
+					memory_order_relaxed);
+			}
 		}
 	
 		bool copy_slot(cliffc_hashtable *topmap, int idx, kvs_data *oldkvs,
@@ -320,7 +361,7 @@ friend class CHM;
 	
 
 	private:
-	static const int Default_Init_Size = 8; // Intial table size
+	static const int Default_Init_Size = 4; // Intial table size
 
 	static slot* const MATCH_ANY;
 	static slot* const NO_MATCH_OLD;
@@ -330,10 +371,6 @@ friend class CHM;
 
 	static const int REPROBE_LIMIT = 10; // Forces a table-resize
 
-	static Hash hashFunc;
-	static KeyEqualsTo keyEqualsTo;
-	static ValEqualsTo valEqualsTo;
-
 	atomic<kvs_data*> _kvs;
 
 	public:
@@ -341,163 +378,199 @@ friend class CHM;
 		// Should initialize the CHM for the construction of the table
 		// For other CHM in kvs_data, they should be initialzed in resize()
 		// because the size is determined dynamically
+		/**
+			@Begin
+			@Entry_point
+			@End
+		*/
 		kvs_data *kvs = new kvs_data(Default_Init_Size);
 		void *chm = (void*) new CHM(0);
 		kvs->_data[0].store(chm, memory_order_relaxed);
-		_kvs.store(kvs, memory_order_release);
+		_kvs.store(kvs, memory_order_relaxed);
 	}
 
 	cliffc_hashtable(int init_size) {
 		// Should initialize the CHM for the construction of the table
 		// For other CHM in kvs_data, they should be initialzed in resize()
 		// because the size is determined dynamically
+
+		/**
+			@Begin
+			@Entry_point
+			@End
+		*/
 		kvs_data *kvs = new kvs_data(init_size);
 		void *chm = (void*) new CHM(0);
 		kvs->_data[0].store(chm, memory_order_relaxed);
-		_kvs.store(kvs, memory_order_release);
+		_kvs.store(kvs, memory_order_relaxed);
 	}
 
 	/**
 		@Begin
 		@Interface: Get
-		@Commit_point_set: Read_Val_Point1 | Read_Val_Point2 | Read_Val_Point3
-		@ID: _getKeyTag(key)
+		//@Commit_point_set: Get_Point1 | Get_Point2 | Get_ReadKVS | Get_ReadNewKVS | Get_Clear
+		@Commit_point_set: Get_Point1 | Get_Point2 | Get_Clear
+		//@Commit_point_set: Get_Point1 | Get_Point2 | Get_Point3
+		@ID: getKeyTag(key)
 		@Action:
-			@DefineVar: TypeV *_Old_Val = __map.get(key)
+			TypeV *_Old_Val = (TypeV*) spec_table_get(map, key);
+			//bool passed = equals_val(_Old_Val, __RET__);
+			bool passed = false;
+			if (!passed) {
+				int old = _Old_Val == NULL ? 0 : _Old_Val->_val;
+				int ret = __RET__ == NULL ? 0 : __RET__->_val;
+				//model_print("Get: key: %d, _Old_Val: %d, RET: %d\n",
+				//key->_val, old, ret);
+			}
 		@Post_check:
-			_equals_val(_Old_Val, __RET__)
+			//__RET__ == NULL ? true : equals_val(_Old_Val, __RET__)
+			equals_val(_Old_Val, __RET__)
 		@End
 	*/
-	TypeV* get(TypeK& key) {
-		void *key_ptr = (void*) new TypeK(key);
-		slot *key_slot = new slot(false, key_ptr);
+	TypeV* get(TypeK *key) {
+		slot *key_slot = new slot(false, key);
 		int fullhash = hash(key_slot);
-		slot *V = get_impl(this, _kvs.load(memory_order_relaxed), key_slot, fullhash);
+		/**** CDSChecker error ****/
+		kvs_data *kvs = _kvs.load(memory_order_acquire);
+		/**
+			//@Begin
+			@Commit_point_define_check: true
+			@Label: Get_ReadKVS
+			@End
+		*/
+		slot *V = get_impl(this, kvs, key_slot, fullhash);
 		if (V == NULL) return NULL;
-		assert (!is_prime(V));
+		MODEL_ASSERT (!is_prime(V));
 		return (TypeV*) V->_ptr;
 	}
 
 	/**
 		@Begin
 		@Interface: Put
-		@Commit_point_set: Write_Val_Point
-		@ID: _getKeyTag(key)
+		//@Commit_point_set: Put_Point | Put_ReadKVS | Put_ReadNewKVS | Put_WriteKey
+		@Commit_point_set: Put_Point | Put_WriteKey
+		@ID: getKeyTag(key)
 		@Action:
 			# Remember this old value at checking point
-			@DefineVar: TypeV *_Old_Val = __map.get(key)
-			@Code: __map.put(key, &val);
+			TypeV *_Old_Val = (TypeV*) spec_table_get(map, key);
+			spec_table_put(map, key, val);
+			//bool passed = equals_val(__RET__, _Old_Val);
+			bool passed = false;
+			if (!passed) {
+				int old = _Old_Val == NULL ? 0 : _Old_Val->_val;
+				int ret = __RET__ == NULL ? 0 : __RET__->_val;
+				//model_print("Put: key: %d, val: %d, _Old_Val: %d, RET: %d\n",
+				//	key->_val, val->_val, old, ret);
+			}
 		@Post_check:
-			_equals_val(__RET__, _Old_Val)
+			equals_val(__RET__, _Old_Val)
 		@End
 	*/
-	TypeV* put(TypeK& key, TypeV& val) {
+	TypeV* put(TypeK *key, TypeV *val) {
 		return putIfMatch(key, val, NO_MATCH_OLD);
 	}
 
 	/**
-		@Begin
+//		@Begin
 		@Interface: PutIfAbsent
 		@Commit_point_set:
-			Write_Val_Point | PutIfAbsent_Fail_Point
-		@Condition: __map.get(key) == NULL
+			Write_Success_Point | PutIfAbsent_Fail_Point
+		@Condition: !spec_table_contains(map, key)
 		@HB_condition:
 			COND_PutIfAbsentSucc :: __RET__ == NULL
-		@ID: _getKeyTag(key)
+		@ID: getKeyTag(key)
 		@Action:
-			@DefineVar: TypeV *_Old_Val = __map.get(key)
-			@Code:
-			if (COND_SAT)
-				__map.put(key, &value);
+			void *_Old_Val = spec_table_get(map, key);
+			if (__COND_SAT__)
+				spec_table_put(map, key, value);
 		@Post_check:
-			COND_SAT ? __RET__ == NULL : _equals_val(_Old_Val, __RET__) 
+			__COND_SAT__ ? __RET__ == NULL : equals_val(_Old_Val, __RET__) 
 		@End
 	*/
-	TypeV* putIfAbsent(TypeK& key, TypeV& value) {
+	TypeV* putIfAbsent(TypeK *key, TypeV *value) {
 		return putIfMatch(key, val, TOMBSTONE);
 	}
 
 	/**
-		@Begin
+//		@Begin
 		@Interface: RemoveAny
-		@Commit_point_set: Write_Val_Point
-		@ID: _getKeyTag(key)
+		@Commit_point_set: Write_Success_Point
+		@ID: getKeyTag(key)
 		@Action:
-			@DefineVar: TypeV *_Old_Val = __map.get(key)
-			@Code: __map.put(key, NULL);
+			void *_Old_Val = spec_table_get(map, key);
+			spec_table_put(map, key, NULL);
 		@Post_check:
-			_equals_val(__RET__, _Old_Val)
+			equals_val(__RET__, _Old_Val)
 		@End
 	*/
-	TypeV* remove(TypeK& key) {
+	TypeV* remove(TypeK *key) {
 		return putIfMatch(key, TOMBSTONE, NO_MATCH_OLD);
 	}
 
 	/**
-		@Begin
+//		@Begin
 		@Interface: RemoveIfMatch
 		@Commit_point_set:
-			Write_Val_Point | RemoveIfMatch_Fail_Point
+			Write_Success_Point | RemoveIfMatch_Fail_Point
 		@Condition:
-			_equals_val(__map.get(key), &val)
+			equals_val(spec_table_get(map, key), val)
 		@HB_condition:
 			COND_RemoveIfMatchSucc :: __RET__ == true
-		@ID: _getKeyTag(key)
+		@ID: getKeyTag(key)
 		@Action:
-			@Code:
-			if (COND_SAT)
-				__map.put(key, NULL);
+			if (__COND_SAT__)
+				spec_table_put(map, key, NULL);
 		@Post_check:
-			COND_SAT ? __RET__ : !__RET__
+			__COND_SAT__ ? __RET__ : !__RET__
 		@End
 	*/
-	bool remove(TypeK& key, TypeV& val) {
+	bool remove(TypeK *key, TypeV *val) {
 		slot *val_slot = val == NULL ? NULL : new slot(false, val);
 		return putIfMatch(key, TOMBSTONE, val) == val;
 
 	}
 
 	/**
-		@Begin
+//		@Begin
 		@Interface: ReplaceAny
 		@Commit_point_set:
-			Write_Val_Point
-		@ID: _getKeyTag(key)
+			Write_Success_Point
+		@ID: getKeyTag(key)
 		@Action:
-			@DefineVar: TypeV *_Old_Val = __map.get(key)
+			void *_Old_Val = spec_table_get(map, key);
 		@Post_check:
-			_equals_val(__RET__, _Old_Val)
+			equals_val(__RET__, _Old_Val)
 		@End
 	*/
-	TypeV* replace(TypeK& key, TypeV& val) {
+	TypeV* replace(TypeK *key, TypeV *val) {
 		return putIfMatch(key, val, MATCH_ANY);
 	}
 
 	/**
-		@Begin
+//		@Begin
 		@Interface: ReplaceIfMatch
 		@Commit_point_set:
-			Write_Val_Point | ReplaceIfMatch_Fail_Point
+			Write_Success_Point | ReplaceIfMatch_Fail_Point
 		@Condition:
-			_equals_val(__map.get(key), &oldval)
+			equals_val(spec_table_get(map, key), oldval)
 		@HB_condition:
 			COND_ReplaceIfMatchSucc :: __RET__ == true
-		@ID: _getKeyTag(key)
+		@ID: getKeyTag(key)
 		@Action:
-			@Code:
-			if (COND_SAT)
-				__map.put(key, &newval);
+			if (__COND_SAT__)
+				spec_table_put(map, key, newval);
 		@Post_check:
-			COND_SAT ? __RET__ : !__RET__
+			__COND_SAT__ ? __RET__ : !__RET__
 		@End
 	*/
-	bool replace(TypeK& key, TypeV& oldval, TypeV& newval) {
+	bool replace(TypeK *key, TypeV *oldval, TypeV *newval) {
 		return putIfMatch(key, newval, oldval) == oldval;
 	}
 
 	private:
 	static CHM* get_chm(kvs_data* kvs) {
-		return (CHM*) kvs->_data[0].load(memory_order_relaxed);
+		CHM *res = (CHM*) kvs->_data[0].load(memory_order_relaxed);
+		return res;
 	}
 
 	static int* get_hashes(kvs_data *kvs) {
@@ -506,10 +579,19 @@ friend class CHM;
 	
 	// Preserve happens-before semantics on newly inserted keys
 	static inline slot* key(kvs_data *kvs, int idx) {
-		assert (idx >= 0 && idx < kvs->_size);
+		MODEL_ASSERT (idx >= 0 && idx < kvs->_size);
 		// Corresponding to the volatile read in get_impl() and putIfMatch in
 		// Cliff Click's Java implementation
-		return (slot*) kvs->_data[idx * 2 + 2].load(memory_order_acquire);
+		slot *res = (slot*) kvs->_data[idx * 2 + 2].load(memory_order_relaxed);
+		/**
+			@Begin
+			# This is a complicated potential commit point since many many functions are
+			# calling val().
+			@Potential_commit_point_define: true
+			@Label: Read_Key_Point
+			@End
+		*/
+		return res;
 	}
 
 	/**
@@ -522,9 +604,10 @@ friend class CHM;
 	*/
 	// Preserve happens-before semantics on newly inserted values
 	static inline slot* val(kvs_data *kvs, int idx) {
-		assert (idx >= 0 && idx < kvs->_size);
+		MODEL_ASSERT (idx >= 0 && idx < kvs->_size);
 		// Corresponding to the volatile read in get_impl() and putIfMatch in
 		// Cliff Click's Java implementation
+		/**** CDSChecker error & hb violation ****/
 		slot *res = (slot*) kvs->_data[idx * 2 + 3].load(memory_order_acquire);
 		/**
 			@Begin
@@ -540,9 +623,9 @@ friend class CHM;
 	}
 
 	static int hash(slot *key_slot) {
-		assert(key_slot != NULL && key_slot->_ptr != NULL);
+		MODEL_ASSERT(key_slot != NULL && key_slot->_ptr != NULL);
 		TypeK* key = (TypeK*) key_slot->_ptr;
-		int h = hashFunc(*key);
+		int h = key->hashCode();
 		// Spread bits according to Cliff Click's code
 		h += (h << 15) ^ 0xffffcd7d;
 		h ^= (h >> 10);
@@ -568,27 +651,36 @@ friend class CHM;
 	static bool keyeq(slot *K, slot *key_slot, int *hashes, int hash,
 		int fullhash) {
 		// Caller should've checked this.
-		assert (K != NULL);
+		MODEL_ASSERT (K != NULL);
 		TypeK* key_ptr = (TypeK*) key_slot->_ptr;
 		return
 			K == key_slot ||
 				((hashes[hash] == 0 || hashes[hash] == fullhash) &&
 				K != TOMBSTONE &&
-				keyEqualsTo(*key_ptr, *((TypeK*) K->_ptr)));
+				key_ptr->equals(K->_ptr));
 	}
 
 	static bool valeq(slot *val_slot1, slot *val_slot2) {
-		assert (val_slot1 != NULL);
+		MODEL_ASSERT (val_slot1 != NULL);
 		TypeK* ptr1 = (TypeV*) val_slot1->_ptr;
 		if (val_slot2 == NULL || ptr1 == NULL) return false;
-		return valEqualsTo(*ptr1, *((TypeV*) val_slot2->_ptr));
+		return ptr1->equals(val_slot2->_ptr);
 	}
 	
 	// Together with key() preserve the happens-before relationship on newly
 	// inserted keys
 	static inline bool CAS_key(kvs_data *kvs, int idx, void *expected, void *desired) {
-		return kvs->_data[2 * idx + 2].compare_exchange_strong(expected,
-			desired, memory_order_release, memory_order_release);
+		bool res = kvs->_data[2 * idx + 2].compare_exchange_strong(expected,
+			desired, memory_order_relaxed, memory_order_relaxed);
+		/**
+			# If it is a successful put instead of a copy or any other internal
+			# operantions, expected != NULL
+			@Begin
+			@Potential_commit_point_define: res
+			@Label: Write_Key_Point
+			@End
+		*/
+		return res;
 	}
 
 	/**
@@ -599,13 +691,14 @@ friend class CHM;
 	// inserted values
 	static inline bool CAS_val(kvs_data *kvs, int idx, void *expected, void
 		*desired) {
+		/**** CDSChecker error & HB violation ****/
 		bool res =  kvs->_data[2 * idx + 3].compare_exchange_strong(expected,
-			desired, memory_order_release, memory_order_release);
+			desired, memory_order_acq_rel, memory_order_relaxed);
 		/**
 			# If it is a successful put instead of a copy or any other internal
 			# operantions, expected != NULL
 			@Begin
-			@Potential_commit_point_define: __ATOMIC_RET__ == true
+			@Potential_commit_point_define: res
 			@Label: Write_Val_Point
 			@End
 		*/
@@ -622,25 +715,35 @@ friend class CHM;
 		int reprobe_cnt = 0;
 		while (true) {
 			slot *K = key(kvs, idx);
-			slot *V = val(kvs, idx);
 			/**
 				@Begin
-				@Commit_point_define: V == NULL
-				@Potential_commit_point_label: Read_Val_Point
-				@Label: Get_Success_Point_1
+				@Commit_point_define: K == NULL
+				@Potential_commit_point_label: Read_Key_Point
+				@Label: Get_Point1
 				@End
 			*/
-
-			if (V == NULL) return NULL; // A miss
+			slot *V = val(kvs, idx);
+			
+			if (K == NULL) {
+				//model_print("Key is null\n");
+				return NULL; // A miss
+			}
 			
 			if (keyeq(K, key_slot, hashes, idx, fullhash)) {
 				// Key hit! Check if table-resize in progress
 				if (!is_prime(V)) {
 					/**
 						@Begin
+						@Commit_point_clear: true
+						@Label: Get_Clear
+						@End
+					*/
+
+					/**
+						@Begin
 						@Commit_point_define: true
 						@Potential_commit_point_label: Read_Val_Point
-						@Label: Get_Success_Point_2
+						@Label: Get_Point2
 						@End
 					*/
 					return (V == TOMBSTONE) ? NULL : V; // Return this value
@@ -653,12 +756,13 @@ friend class CHM;
 			if (++reprobe_cnt >= REPROBE_LIMIT ||
 				key_slot == TOMBSTONE) {
 				// Retry in new table
-				// Atomic read (acquire) can be here 
+				// Atomic read can be here 
+				/**** FIXME: miss ****/
 				kvs_data *newkvs = chm->_newkvs.load(memory_order_acquire);
 				/**
-					@Begin
-					@Commit_point_define_check: newkvs == NULL
-					@Label: Get_Success_Point_3
+					//@Begin
+					@Commit_point_define_check: true
+					@Label: Get_ReadNewKVS
 					@End
 				*/
 				return newkvs == NULL ? NULL : get_impl(topmap,
@@ -670,21 +774,26 @@ friend class CHM;
 	}
 
 	// A wrapper of the essential function putIfMatch()
-	TypeV* putIfMatch(TypeK& key, TypeV& value, slot *old_val) {
+	TypeV* putIfMatch(TypeK *key, TypeV *value, slot *old_val) {
 		// TODO: Should throw an exception rather return NULL
 		if (old_val == NULL) {
 			return NULL;
 		}
-		void *key_ptr = (void*) new TypeK(key);
-		slot *key_slot = new slot(false, key_ptr);
+		slot *key_slot = new slot(false, key);
 
-		void *val_ptr = (void*) new TypeV(value);
-		slot *value_slot = new slot(false, val_ptr);
-		slot *res = putIfMatch(this, _kvs.load(memory_order_relaxed), key_slot,
-			value_slot, old_val);
+		slot *value_slot = new slot(false, value);
+		/**** FIXME: miss ****/
+		kvs_data *kvs = _kvs.load(memory_order_acquire);
+		/**
+			//@Begin
+			@Commit_point_define_check: true
+			@Label: Put_ReadKVS
+			@End
+		*/
+		slot *res = putIfMatch(this, kvs, key_slot, value_slot, old_val);
 		// Only when copy_slot() call putIfMatch() will it return NULL
-		assert (res != NULL); 
-		assert (!is_prime(res));
+		MODEL_ASSERT (res != NULL); 
+		MODEL_ASSERT (!is_prime(res));
 		return res == TOMBSTONE ? NULL : (TypeV*) res->_ptr;
 	}
 
@@ -697,9 +806,9 @@ friend class CHM;
 	*/
 	static slot* putIfMatch(cliffc_hashtable *topmap, kvs_data *kvs, slot
 		*key_slot, slot *val_slot, slot *expVal) {
-		assert (val_slot != NULL);
-		assert (!is_prime(val_slot));
-		assert (!is_prime(expVal));
+		MODEL_ASSERT (val_slot != NULL);
+		MODEL_ASSERT (!is_prime(val_slot));
+		MODEL_ASSERT (!is_prime(expVal));
 
 		int fullhash = hash(key_slot);
 		int len = kvs->_size;
@@ -720,12 +829,19 @@ friend class CHM;
 				if (val_slot == TOMBSTONE) return val_slot;
 				// Claim the null key-slot
 				if (CAS_key(kvs, idx, NULL, key_slot)) {
+					/**
+						@Begin
+						@Commit_point_define: true
+						@Potential_commit_point_label: Write_Key_Point
+						@Label: Put_WriteKey
+						@End
+					*/
 					chm->_slots.fetch_add(1, memory_order_relaxed); // Inc key-slots-used count
 					hashes[idx] = fullhash; // Memorize full hash
 					break;
 				}
 				K = key(kvs, idx); // CAS failed, get updated value
-				assert (K != NULL);
+				MODEL_ASSERT (K != NULL);
 			}
 
 			// Key slot not null, there exists a Key here
@@ -738,6 +854,7 @@ friend class CHM;
 			if (++reprobe_cnt >= reprobe_limit(len) ||
 				K == TOMBSTONE) { // Found a Tombstone key, no more keys
 				newkvs = chm->resize(topmap, kvs);
+				//model_print("resize1\n");
 				// Help along an existing copy
 				if (expVal != NULL) topmap->help_copy(newkvs);
 				return putIfMatch(topmap, newkvs, key_slot, val_slot, expVal);
@@ -750,10 +867,19 @@ friend class CHM;
 	
 		// Here it tries to resize cause it doesn't want other threads to stop
 		// its progress (eagerly try to resize soon)
+		/**** FIXME: miss ****/
 		newkvs = chm->_newkvs.load(memory_order_acquire);
+		/**
+			//@Begin
+			@Commit_point_define_check: true
+			@Label: Put_ReadNewKVS
+			@End
+		*/
 		if (newkvs == NULL &&
-			((V == NULL && chm->table_full(reprobe_cnt, len)) || is_prime(V)))
+			((V == NULL && chm->table_full(reprobe_cnt, len)) || is_prime(V))) {
+			//model_print("resize2\n");
 			newkvs = chm->resize(topmap, kvs); // Force the copy to start
+		}
 		
 		// Finish the copy and then put it in the new table
 		if (newkvs != NULL)
@@ -762,7 +888,7 @@ friend class CHM;
 		
 		// Decided to update the existing table
 		while (true) {
-			assert (!is_prime(V));
+			MODEL_ASSERT (!is_prime(V));
 
 			if (expVal != NO_MATCH_OLD &&
 				V != expVal &&
@@ -770,7 +896,7 @@ friend class CHM;
 				!(V == NULL && expVal == TOMBSTONE) &&
 				(expVal == NULL || !valeq(expVal, V))) {
 				/**
-					@Begin
+					//@Begin
 					@Commit_point_define: expVal == TOMBSTONE
 					@Potential_commit_point_label: Read_Val_Point
 					@Label: PutIfAbsent_Fail_Point
@@ -779,15 +905,15 @@ friend class CHM;
 					@End
 				*/
 				/**
-					@Begin
+					//@Begin
 					@Commit_point_define: expVal != NULL && val_slot == TOMBSTONE
 					@Potential_commit_point_label: Read_Val_Point
 					@Label: RemoveIfMatch_Fail_Point
 					@End
 				*/
 				/**
-					@Begin
-					@Commit_point_define: !valeq(expVal, V)
+					//@Begin
+					@Commit_point_define: expVal != NULL && !valeq(expVal, V)
 					@Potential_commit_point_label: Read_Val_Point
 					@Label: ReplaceIfMatch_Fail_Point
 					@End
@@ -801,7 +927,7 @@ friend class CHM;
 					# The only point where a successful put happens
 					@Commit_point_define: true
 					@Potential_commit_point_label: Write_Val_Point
-					@Label: Write_Success_Point
+					@Label: Put_Point
 					@End
 				*/
 				if (expVal != NULL) { // Not called by a table-copy
@@ -827,13 +953,19 @@ friend class CHM;
 
 	// Help along an existing table-resize. This is a fast cut-out wrapper.
 	kvs_data* help_copy(kvs_data *helper) {
+		/**** FIXME: miss ****/
 		kvs_data *topkvs = _kvs.load(memory_order_acquire);
 		CHM *topchm = get_chm(topkvs);
 		// No cpy in progress
-		if (topchm->_newkvs.load(memory_order_acquire) == NULL) return helper;
+		if (topchm->_newkvs.load(memory_order_relaxed) == NULL) return helper;
 		topchm->help_copy_impl(this, topkvs, false);
 		return helper;
 	}
 };
+/**
+	@Begin
+	@Class_end
+	@End
+*/
 
 #endif
