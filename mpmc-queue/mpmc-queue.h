@@ -34,7 +34,7 @@ public:
 			wr = rdwr & 0xFFFF;
 
 			if ( wr == rd ) // empty
-				return false;
+				return NULL;
 
 			if ( m_rdwr.compare_exchange_weak(rdwr,rdwr+(1<<16),mo_acq_rel) )
 				break;

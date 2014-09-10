@@ -15,6 +15,7 @@ Deque * create();
 int take(Deque *q);
 void resize(Deque *q);
 void push(Deque *q, int x);
+int steal(Deque *q);
 
 #define EMPTY 0xffffffff
 #define ABORT 0xfffffffe

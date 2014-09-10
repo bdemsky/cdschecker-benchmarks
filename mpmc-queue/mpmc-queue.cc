@@ -18,7 +18,7 @@ void threadA(struct mpmc_boundq_1_alt<int32_t, sizeof(int32_t)> *queue)
 void threadB(struct mpmc_boundq_1_alt<int32_t, sizeof(int32_t)> *queue)
 {
 	int32_t *bin;
-	while (bin = queue->read_fetch()) {
+	while ((bin = queue->read_fetch()) != NULL) {
 		printf("Read: %d\n", load_32(bin));
 		queue->read_consume();
 	}
@@ -30,7 +30,7 @@ void threadC(struct mpmc_boundq_1_alt<int32_t, sizeof(int32_t)> *queue)
 	store_32(bin, 1);
 	queue->write_publish();
 
-	while (bin = queue->read_fetch()) {
+	while ((bin = queue->read_fetch()) != NULL) {
 		printf("Read: %d\n", load_32(bin));
 		queue->read_consume();
 	}
