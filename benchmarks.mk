@@ -8,8 +8,7 @@ UNAME = $(shell uname)
 LIB_NAME = model
 LIB_SO = lib$(LIB_NAME).so
 
-#BASE = ../..
-BASE = $(CDS_DIR)
+BASE = ../..
 INCLUDE = -I$(BASE)/include -I../include
 
 # C preprocessor flags

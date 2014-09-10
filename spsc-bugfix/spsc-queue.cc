@@ -6,6 +6,7 @@ spsc_queue<int> *q;
 
 	void thread(unsigned thread_index)
 	{
+		for (int i = 0; i < 40; i++) {
 		if (0 == thread_index)
 		{
 			q->enqueue(11);
@@ -14,6 +15,7 @@ spsc_queue<int> *q;
 		{
 			int d = q->dequeue();
 			RL_ASSERT(11 == d);
+		}
 		}
 	}
 
