@@ -110,7 +110,7 @@ class HashMap {
 
 	static const int SEGMENT_MASK = CONCURRENCY_LEVEL - 1;
 
-	Segment segments[CONCURRENCY_LEVEL];
+	Segment *segments[CONCURRENCY_LEVEL];
 
 	static const int DEFAULT_INITIAL_CAPACITY = 16;
 
@@ -122,6 +122,9 @@ class HashMap {
 		this->table = new atomic<Entry*>[capacity];
 		for (int i = 0; i < capacity; i++) {
 			atomic_init(&table[i], NULL);
+		}
+		for (int i = 0; i < CONCURRENCY_LEVEL; i++) {
+			segments[i] = new Segment;
 		}
 	}
 
@@ -162,13 +165,12 @@ class HashMap {
 		}
 	
 		// Recheck under synch if key apparently not there or interference
-		Segment seg = segments[hash & SEGMENT_MASK];
-		seg.lock(); // Critical region begins
+		Segment *seg = segments[hash & SEGMENT_MASK];
+		seg->lock(); // Critical region begins
 		// Not considering resize now, so ignore the reload of table...
-		atomic<Entry*> *newFirst = &tab[index];
 
 		// Synchronized by locking, no need to be load acquire
-		Entry *newFirstPtr = newFirst->load(relaxed);
+		Entry *newFirstPtr = first->load(relaxed);
 		if (e != NULL || firstPtr != newFirstPtr) {
 			e = newFirstPtr;
 			while (e != NULL) {
@@ -180,7 +182,7 @@ class HashMap {
 				e = e->next.load(relaxed);
 			}
 		}
-		seg.unlock(); // Critical region ends
+		seg->unlock(); // Critical region ends
 		return NULL;
 	}
 
@@ -189,10 +191,10 @@ class HashMap {
 		//ASSERT (value != NULL);
 
 		int hash = hashKey(key);
-		Segment seg = segments[hash & SEGMENT_MASK];
+		Segment *seg = segments[hash & SEGMENT_MASK];
 		atomic<Entry*> *tab;
 
-		seg.lock(); // Critical region begins
+		seg->lock(); // Critical region begins
 		tab = table;
 		int index = hash & (capacity - 1);
 
@@ -208,7 +210,7 @@ class HashMap {
 				// FIXME: This could be an acquire?? 
 				res = e->value.load(acquire);
 				e->value.store(value, seq_cst);
-				seg.unlock(); // Don't forget to unlock before return
+				seg->unlock(); // Don't forget to unlock before return
 				return res;
 			}
 		}
@@ -216,8 +218,8 @@ class HashMap {
 		// Add to front of list
 		Entry *newEntry = new Entry(hash, key, value, firstPtr);
 		// Publish the newEntry to others
-		tab[index].store(newEntry, release);
-		seg.unlock(); // Critical region ends
+		first->store(newEntry, release);
+		seg->unlock(); // Critical region ends
 		return NULL;
 	}
 };
