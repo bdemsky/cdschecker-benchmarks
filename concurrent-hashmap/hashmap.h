@@ -64,6 +64,12 @@ struct Value {
 	{
 
 	}
+
+	bool equals(Value *other) {
+		if (!other)
+			return false;
+		return vX == other->vX && vY == other->vY && vZ == other->vZ;
+	}
 };
 
 class Entry {
@@ -140,7 +146,8 @@ class HashMap {
 	}
 
 	Value* get(Key *key) {
-		int hash = hashKey(key);	// throws null pointer exception if key null
+		MODEL_ASSERT (key);
+		int hash = hashKey(key);
 
 		// Try first without locking...
 		atomic<Entry*> *tab = table;
@@ -187,8 +194,8 @@ class HashMap {
 	}
 
 	Value* put(Key *key, Value *value) {
-		// Don't allow NULL value
-		//ASSERT (value != NULL);
+		// Don't allow NULL key or value
+		MODEL_ASSERT (key && value);
 
 		int hash = hashKey(key);
 		Segment *seg = segments[hash & SEGMENT_MASK];
@@ -200,19 +207,22 @@ class HashMap {
 
 		atomic<Entry*> *first = &tab[index];
 		Entry *e;
-		Value *res = NULL;
+		Value *oldValue = NULL;
 	
 		// The written of the entry is synchronized by locking
 		Entry *firstPtr = first->load(relaxed);
 		e = firstPtr;
 		while (e != NULL) {
 			if (e->hash == hash && eq(key, e->key)) {
-				// FIXME: This could be an acquire?? 
-				res = e->value.load(acquire);
+				// FIXME: This could be a relaxed (because locking synchronize
+				// with the previous put())?? 
+				oldValue = e->value.load(acquire);
 				e->value.store(value, seq_cst);
 				seg->unlock(); // Don't forget to unlock before return
-				return res;
+				return oldValue;
 			}
+			// Synchronized by locking
+			e = e->next.load(relaxed);
 		}
 
 		// Add to front of list
@@ -221,6 +231,61 @@ class HashMap {
 		first->store(newEntry, release);
 		seg->unlock(); // Critical region ends
 		return NULL;
+	}
+
+	Value* remove(Key *key, Value *value) {
+		MODEL_ASSERT (key);
+		int hash = hashKey(key);
+		Segment *seg = segments[hash & SEGMENT_MASK];
+		atomic<Entry*> *tab;
+
+		seg->lock(); // Critical region begins
+		tab = table;
+		int index = hash & (capacity - 1);
+
+		atomic<Entry*> *first = &tab[index];
+		Entry *e;
+		Value *oldValue = NULL;
+	
+		// The written of the entry is synchronized by locking
+		Entry *firstPtr = first->load(relaxed);
+		e = firstPtr;
+
+		while (true) {
+			if (e != NULL) {
+				seg->unlock(); // Don't forget to unlock
+				return NULL;
+			}
+			if (e->hash == hash && eq(key, e->key))
+				break;
+			// Synchronized by locking
+			e = e->next.load(relaxed);
+		}
+
+		// FIXME: This could be a relaxed (because locking synchronize
+		// with the previous put())?? 
+		oldValue = e->value.load(acquire);
+		// If the value parameter is NULL, we will remove the entry anyway
+		if (value != NULL && value->equals(oldValue))
+			return NULL;
+
+		// Force the get() to grab the lock and retry
+		e->value.store(NULL, relaxed);
+
+		// The strategy to remove the entry is to keep the entries after the
+		// removed one and copy the ones before it
+		Entry *head = e->next.load(relaxed);
+		Entry *p;
+		p = first->load(relaxed);
+		while (p != e) {
+			head = new Entry(p->hash, p->key, p->value.load(relaxed), head);
+			p = p->next.load(relaxed);
+		}
+
+		// Publish the new head to readers 
+		first->store(head, release);
+		seg->unlock(); // Critical region ends
+		return oldValue;
 	}
 };
 
