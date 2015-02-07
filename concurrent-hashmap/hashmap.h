@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <mutex>
 
+#include "cdsannotate.h"
+
 #define relaxed memory_order_relaxed
 #define release memory_order_release
 #define acquire memory_order_acquire
@@ -157,6 +159,11 @@ class HashMap {
 		Value *res = NULL;
 
 		// Should be a load acquire
+		// This load action here makes it problematic for the SC analysis, what
+		// we need to do is as follows: if the get() method ever acquires the
+		// lock, we ignore this operation for the SC analysis, and otherwise we
+		// take it into consideration
+		
 		Entry *firstPtr = first->load(acquire);
 		e = firstPtr;
 		while (e != NULL) {
@@ -183,6 +190,7 @@ class HashMap {
 			while (e != NULL) {
 				if (e->hash == hash && eq(key, e->key)) {
 					res = e->value.load(seq_cst);
+					seg->unlock(); // Critical region ends
 					return res;
 				}
 				// Synchronized by locking
@@ -266,8 +274,10 @@ class HashMap {
 		// with the previous put())?? 
 		oldValue = e->value.load(acquire);
 		// If the value parameter is NULL, we will remove the entry anyway
-		if (value != NULL && value->equals(oldValue))
+		if (value != NULL && value->equals(oldValue)) {
+			seg->unlock();
 			return NULL;
+		}
 
 		// Force the get() to grab the lock and retry
 		e->value.store(NULL, relaxed);

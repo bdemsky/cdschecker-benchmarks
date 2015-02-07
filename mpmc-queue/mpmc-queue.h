@@ -27,6 +27,8 @@ public:
 	//-----------------------------------------------------
 
 	t_element * read_fetch() {
+		// FIXME: We can have a relaxed for sure here since the next CAS
+		// will fix the problem
 		unsigned int rdwr = m_rdwr.load(mo_acquire);
 		unsigned int rd,wr;
 		for(;;) {
@@ -35,7 +37,7 @@ public:
 
 			if ( wr == rd ) // empty
 				return NULL;
-
+	
 			if ( m_rdwr.compare_exchange_weak(rdwr,rdwr+(1<<16),mo_acq_rel) )
 				break;
 			else
@@ -60,6 +62,8 @@ public:
 	//-----------------------------------------------------
 
 	t_element * write_prepare() {
+		// FIXME: We can have a relaxed for sure here since the next CAS
+		// will fix the problem
 		unsigned int rdwr = m_rdwr.load(mo_acquire);
 		unsigned int rd,wr;
 		for(;;) {
