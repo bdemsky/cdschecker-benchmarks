@@ -1,14 +1,10 @@
-#Non-SC case:
-If we have two threads, 1 thread has a put(K1, V1), another thread has another
-put(K2, V2) followed by a get(K3), where K1 and K3 have the same hash and k1 and
-k2 are hashed in the same slot, as follows.
+#Non-SC:
+The following case can be non-SC.
 
 Thrd1						Thrd2
-put(k1, v1); // a			put(k2, v2); // b
-							get(k3); // c
-Suppose we have a synchronized before b with the segment lock, so by SC a is
-before b. Since b is sequenced before c, a should be SC before c. However, in c,
-the first time it does not grab the lock, and c could read an old entry (the
-head of the linked list, meaning that it gets a shorter list), and that can be
-an SC violation. The solution is that we use annotations to tell the SC analysis
-when we will ignore the specific actions (FIXME!!)
+put(k1, v1); // a			put(k2, v2); // c
+get(k2); // b				get(k1); // d
+
+When b and d both read the old head of the list (and they later grab the lock,
+making it the interface SC), it's non-SC because neither reads the updated
+value.
