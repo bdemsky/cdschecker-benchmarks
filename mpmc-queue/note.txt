@@ -1,0 +1,20 @@
+#1 Why this data structure is non-SC (but it's SC at abstraction).
+
+The underlying pattern of the non-SCness are as the following:
+
+T1				T2
+x = 1;			y = 1;
+r1 = y;			r2 = x;
+
+Suppose there are two identical threads, both having a writer followed by a
+reader, as follows:
+
+T1							T2
+m_written.CAS;				m_rdwr.CAS;
+
+m_rdwr.CAS;					m_written.CAS; // In write_publish()
+
+m_written.load; // a		m_rdwr.load; // The first in the read_fetch() // b
+
+a & b can both read old value and it's non-SC. However, the later loads and CAS
+in the loops will finally fix this problem.

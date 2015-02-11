@@ -15,6 +15,7 @@
 #include <mutex>
 
 #include "sc_annotation.h"
+#include "wildcard.h"
 
 #define relaxed memory_order_relaxed
 #define release memory_order_release
@@ -84,8 +85,8 @@ class Entry {
 	Entry(int h, Key *k, Value *v, Entry *n) {
 		this->hash = h;
 		this->key = k;
-		this->value.store(v, relaxed);
-		this->next.store(n, relaxed);
+		this->value.store(v, wildcard(1)); // relaxed
+		this->next.store(n, wildcard(2)); // relaxed
 	}
 };
 
@@ -165,20 +166,20 @@ class HashMap {
 		// take it into consideration
 		
 		SC_BEGIN();
-		Entry *firstPtr = first->load(acquire);
+		Entry *firstPtr = first->load(wildcard(3)); // acquire
 		SC_KEEP();
 		SC_END();
 
 		e = firstPtr;
 		while (e != NULL) {
 			if (e->hash == hash && eq(key, e->key)) {
-				res = e->value.load(seq_cst);
+				res = e->value.load(wildcard(4)); // seq_cst
 				if (res != NULL)
 					return res;
 				else
 					break;
 				// Loading the next entry
-				e = e->next.load(acquire);
+				e = e->next.load(wildcard(5)); // acquire
 			}
 		}
 	
@@ -188,17 +189,17 @@ class HashMap {
 		// Not considering resize now, so ignore the reload of table...
 
 		// Synchronized by locking, no need to be load acquire
-		Entry *newFirstPtr = first->load(relaxed);
+		Entry *newFirstPtr = first->load(wildcard(6)); // relaxed
 		if (e != NULL || firstPtr != newFirstPtr) {
 			e = newFirstPtr;
 			while (e != NULL) {
 				if (e->hash == hash && eq(key, e->key)) {
-					res = e->value.load(seq_cst);
+					res = e->value.load(wildcard(7)); // seq_cst
 					seg->unlock(); // Critical region ends
 					return res;
 				}
 				// Synchronized by locking
-				e = e->next.load(relaxed);
+				e = e->next.load(wildcard(8)); // relaxed
 			}
 		}
 		seg->unlock(); // Critical region ends
@@ -222,25 +223,25 @@ class HashMap {
 		Value *oldValue = NULL;
 	
 		// The written of the entry is synchronized by locking
-		Entry *firstPtr = first->load(relaxed);
+		Entry *firstPtr = first->load(wildcard(9)); // relaxed
 		e = firstPtr;
 		while (e != NULL) {
 			if (e->hash == hash && eq(key, e->key)) {
 				// FIXME: This could be a relaxed (because locking synchronize
 				// with the previous put())?? 
-				oldValue = e->value.load(acquire);
-				e->value.store(value, seq_cst);
+				oldValue = e->value.load(wildcard(10)); // acquire
+				e->value.store(value, wildcard(11)); // seq_cst
 				seg->unlock(); // Don't forget to unlock before return
 				return oldValue;
 			}
 			// Synchronized by locking
-			e = e->next.load(relaxed);
+			e = e->next.load(wildcard(12)); // relaxed
 		}
 
 		// Add to front of list
 		Entry *newEntry = new Entry(hash, key, value, firstPtr);
 		// Publish the newEntry to others
-		first->store(newEntry, release);
+		first->store(newEntry, wildcard(13)); // release
 		seg->unlock(); // Critical region ends
 		return NULL;
 	}
