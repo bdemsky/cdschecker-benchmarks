@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <threads.h>
 
-#include "my_queue.h"
+#include "queue.h"
 #include "model-assert.h"
 
 static int procs = 2;

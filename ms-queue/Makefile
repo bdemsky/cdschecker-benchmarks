@@ -1,17 +1,26 @@
 include ../benchmarks.mk
 
-TESTNAME = main
+BENCH := queue
 
-HEADERS = my_queue.h
-OBJECTS = main.o my_queue.o
+NORMAL_TESTS := testcase1
 
-all: $(TESTNAME)
+WILDCARD_TESTS := $(patsubst %, %_wildcard, $(NORMAL_TESTS))
 
-$(TESTNAME): $(HEADERS) $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS) $(CFLAGS) $(LDFLAGS)
+TESTS := $(NORMAL_TESTS) $(WILDCARD_TESTS)
 
-%.o: %.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+all: $(TESTS)
+
+$(BENCH).o : $(BENCH).c $(BENCH).h
+	$(CC) -o $@ $< $(CFLAGS) -c $(LDFLAGS)
+
+$(BENCH)_wildcard.o : $(BENCH)_wildcard.c $(BENCH).h
+	$(CC) -o $@ $< $(CFLAGS) -c $(LDFLAGS)
+
+$(WILDCARD_TESTS): %_wildcard : %.c $(BENCH)_wildcard.o 
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
+$(NORMAL_TESTS): % : %.c $(BENCH).o
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 clean:
-	rm -f $(TESTNAME) *.o
+	rm -f *.o *.d $(TESTS)

@@ -3,7 +3,7 @@
 #include "librace.h"
 #include "model-assert.h"
 
-#include "my_queue.h"
+#include "queue.h"
 
 #define relaxed memory_order_relaxed
 #define release memory_order_release
