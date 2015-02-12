@@ -1,11 +1,12 @@
-#include <iostream>
 #include <threads.h>
+
+#ifdef WILDCARD
+#include "hashmap_wildcard.h"
+#else
 #include "hashmap.h"
+#endif
 
 HashMap *table;
-
-Key *k1, *k2;
-Value *r1, *r2, *r3, *r4, *v1, *v2;
 
 void printKey(Key *key) {
 	if (key)
@@ -21,24 +22,30 @@ void printValue(Value *value) {
 		printf("velocity = NULL\n");
 }
 
+// Key(3, 2, 6) & Key(1, 3, 3) are hashed to the same slot -> 4
+// Key(1, 1, 1) & Key(3, 2, 2) are hashed to the same slot -> 0
+// Key(2, 4, 1) & Key(3, 4, 2) are hashed to the same slot -> 3
+// Key(3, 4, 5) & Key(1, 4, 3) are hashed to the same slot -> 5
+
+
 void threadA(void *arg) {
-	k1 = new Key(1, 1, 1);
-	k2 = new Key(3, 4, 5);
-	v1 = new Value(10, 10, 10);
-	r1 = table->put(k1, v1);
+	Key *k1 = new Key(3, 2, 6);
+	Key *k2 = new Key(1, 1, 1);
+	Value *v1 = new Value(10, 10, 10);
+	Value *r1 = table->put(k1, v1);
 	//printValue(r1);
-	r2 = table->get(k2);
-	printf("Thrd A:\n");
+	Value *r2 = table->get(k2);
+	//printf("Thrd A:\n");
 	printValue(r2);
 }
 
 void threadB(void *arg) {
-	k1 = new Key(1, 1, 1);
-	k2 = new Key(3, 4, 5);
-	v2 = new Value(30, 40, 50);
-	r3 = table->put(k2, v2);
+	Key *k1 = new Key(3, 2, 6);
+	Key *k2 = new Key(1, 1, 1);
+	Value *v2 = new Value(30, 40, 50);
+	Value *r3 = table->put(k2, v2);
 	//printValue(r3);
-	r4 = table->get(k1);
+	Value *r4 = table->get(k1);
 	printf("Thrd B:\n");
 	printValue(r4);
 }

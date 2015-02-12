@@ -1,17 +1,20 @@
 include ../benchmarks.mk
 
-TESTS := table table_wildcard1
+NORMAL_TESTS := testcase1 testcase2
+
+WILDCARD_TESTS := $(patsubst %, %_wildcard, $(NORMAL_TESTS))
+
+TESTS := $(NORMAL_TESTS) $(WILDCARD_TESTS)
 
 all: $(TESTS)
 
-table: main.cc hashmap.h
-	$(CXX) -o $@ $^ $(SPEC_OBJ) $(CXXFLAGS) -std=c++0x $(LDFLAGS)
+$(WILDCARD_TESTS): CXXFLAGS += -DWILDCARD
 
-table_wildcard1: main_wildcard1.cc hashmap_wildcard.h
-	$(CXX) -o $@ $^ $(SPEC_OBJ) $(CXXFLAGS) -std=c++0x $(LDFLAGS)
+$(WILDCARD_TESTS): %_wildcard : %.cc hashmap_wildcard.h 
+	$(CXX) -o $@ $< $(SPEC_OBJ) $(CXXFLAGS) $(LDFLAGS)
 
-table_wildcard2: main_wildcard1.cc hashmap_wildcard.h
-	$(CXX) -o $@ $^ $(SPEC_OBJ) $(CXXFLAGS) -std=c++0x $(LDFLAGS)
+$(NORMAL_TESTS): % : %.cc hashmap.h
+	$(CXX) -o $@ $< $(SPEC_OBJ) $(CXXFLAGS) $(LDFLAGS)
 
 clean:
 	rm -f *.o *.d $(TESTS)

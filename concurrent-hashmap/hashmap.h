@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <mutex>
 
+#include "common.h"
 #include "sc_annotation.h"
 
 #define relaxed memory_order_relaxed
@@ -164,10 +165,10 @@ class HashMap {
 		// lock, we ignore this operation for the SC analysis, and otherwise we
 		// take it into consideration
 		
-		SC_BEGIN();
+		//SC_BEGIN();
 		Entry *firstPtr = first->load(acquire);
-		SC_KEEP();
-		SC_END();
+		//SC_KEEP();
+		//SC_END();
 
 		e = firstPtr;
 		while (e != NULL) {
@@ -177,9 +178,9 @@ class HashMap {
 					return res;
 				else
 					break;
-				// Loading the next entry
-				e = e->next.load(acquire);
 			}
+			// Loading the next entry
+			e = e->next.load(acquire);
 		}
 	
 		// Recheck under synch if key apparently not there or interference

@@ -178,9 +178,9 @@ class HashMap {
 					return res;
 				else
 					break;
-				// Loading the next entry
-				e = e->next.load(wildcard(5)); // acquire
 			}
+			// Loading the next entry
+			e = e->next.load(wildcard(5)); // acquire
 		}
 	
 		// Recheck under synch if key apparently not there or interference
