@@ -4,6 +4,7 @@
 #include "model-assert.h"
 
 #include "stack.h"
+#include "wildcard.h"
 
 #define MAX_FREELIST 4 /* Each thread can own up to MAX_FREELIST free nodes */
 #define INITIAL_FREE 2 /* Each thread starts with INITIAL_FREE free nodes */
@@ -82,14 +83,14 @@ void push(stack_t *s, unsigned int val) {
 	bool success;
 	while (true) {
 		// acquire
-		oldTop = atomic_load_explicit(&s->top, acquire);
+		oldTop = atomic_load_explicit(&s->top, wildcard(1));
 		newTop = MAKE_POINTER(nodeIdx, get_count(oldTop) + 1);
 		// relaxed
-		atomic_store_explicit(&node->next, oldTop, relaxed);
+		atomic_store_explicit(&node->next, oldTop, wildcard(2));
 
 		// release & relaxed
 		success = atomic_compare_exchange_strong_explicit(&s->top, &oldTop,
-			newTop, release, relaxed);
+			newTop, wildcard(3), wildcard(4));
 		if (success)
 			break;
 	} 
@@ -103,16 +104,16 @@ unsigned int pop(stack_t *s)
 	int val;
 	while (true) {
 		// acquire
-		oldTop = atomic_load_explicit(&s->top, acquire);
+		oldTop = atomic_load_explicit(&s->top, wildcard(5));
 		if (get_ptr(oldTop) == 0)
 			return 0;
 		node = &s->nodes[get_ptr(oldTop)];
 		// relaxed
-		next = atomic_load_explicit(&node->next, relaxed);
+		next = atomic_load_explicit(&node->next, wildcard(6));
 		newTop = MAKE_POINTER(get_ptr(next), get_count(oldTop) + 1);
 		// release & relaxed
 		success = atomic_compare_exchange_strong_explicit(&s->top, &oldTop,
-			newTop, release, relaxed);
+			newTop, wildcard(7), wildcard(8));
 		if (success)
 			break;
 	}
