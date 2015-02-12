@@ -4,7 +4,9 @@ TESTNAME = mpmc-queue
 TESTS = mpmc-queue mpmc-1r2w mpmc-2r1w mpmc-queue-rdwr
 TESTS += mpmc-queue-noinit mpmc-1r2w-noinit mpmc-2r1w-noinit mpmc-rdwr-noinit
 
-all: $(TESTS)
+WILDCARD_TESTS = testcase1 testcase2
+
+all: $(TESTS) $(WILDCARD_TESTS)
 
 mpmc-queue: CPPFLAGS += -DCONFIG_MPMC_READERS=2 -DCONFIG_MPMC_WRITERS=2
 mpmc-queue-rdwr: CPPFLAGS += -DCONFIG_MPMC_READERS=0 -DCONFIG_MPMC_WRITERS=0 -DCONFIG_MPMC_RDWR=2
@@ -18,5 +20,8 @@ mpmc-rdwr-noinit: CPPFLAGS += -DCONFIG_MPMC_READERS=0 -DCONFIG_MPMC_WRITERS=0 -D
 $(TESTS): $(TESTNAME).cc $(TESTNAME).h
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
 
+$(WILDCARD_TESTS): % : %.cc $(TESTNAME)-wildcard.h
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+
 clean:
-	rm -f $(TESTS) *.o
+	rm -f $(TESTS) $(WILDCARD_TESTS) *.o
