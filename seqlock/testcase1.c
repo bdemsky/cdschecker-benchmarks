@@ -1,7 +1,7 @@
 #include <stdatomic.h>
 #include <threads.h>
 
-#include "seqlock.h"
+#include "seqlock-wildcard.h"
 
 seqlock_t *lock;
 

@@ -1,9 +1,14 @@
 include ../benchmarks.mk
 
-all: seqlock
+WILDCARD_TESTS = testcase1
 
-seqlock: seqlock.c
+all: seqlock $(WILDCARD_TESTS)
+
+seqlock: seqlock.c seqlock.h
 	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
 
+$(WILDCARD_TESTS): % : %.c seqlock-wildcard.h
+	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+	
 clean:
-	rm -f seqlock
+	rm -f seqlock $(WILDCARD_TESTS)
