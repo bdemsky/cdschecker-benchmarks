@@ -1,10 +1,26 @@
 include ../benchmarks.mk
 
-main: my_stack.o main.c
+BENCH := stack
+
+NORMAL_TESTS := testcase1
+
+WILDCARD_TESTS := $(patsubst %, %_wildcard, $(NORMAL_TESTS))
+
+TESTS := $(NORMAL_TESTS) $(WILDCARD_TESTS)
+
+all: $(TESTS)
+
+$(BENCH).o : $(BENCH).c $(BENCH).h
+	$(CC) -o $@ $< $(CFLAGS) -c $(LDFLAGS)
+
+$(BENCH)_wildcard.o : $(BENCH)_wildcard.c $(BENCH).h
+	$(CC) -o $@ $< $(CFLAGS) -c $(LDFLAGS)
+
+$(WILDCARD_TESTS): %_wildcard : %.c $(BENCH)_wildcard.o 
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
-%.o: %.c
-	$(CC) -c -o $@ $^ $(CFLAGS)
+$(NORMAL_TESTS): % : %.c $(BENCH).o
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 clean:
-	rm -f *.o
+	rm -f *.o *.d $(TESTS)
