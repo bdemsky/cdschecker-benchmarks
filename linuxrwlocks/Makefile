@@ -1,11 +1,14 @@
 include ../benchmarks.mk
 
 TESTNAME = linuxrwlocks
+WILDCARD_TESTS = testcase1
+all: $(TESTNAME) $(WILDCARD_TESTS)
 
-all: $(TESTNAME)
+$(TESTNAME): $(TESTNAME).c $(TESTNAME).h
+	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
 
-$(TESTNAME): $(TESTNAME).c
+$(WILDCARD_TESTS): % : %.c $(TESTNAME)-wildcard.h
 	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
 
 clean:
-	rm -f $(TESTNAME) *.o
+	rm -f $(TESTNAME) *.o $(WILDCARD_TESTS)
