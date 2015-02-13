@@ -10,17 +10,11 @@ TESTS := $(NORMAL_TESTS) $(WILDCARD_TESTS)
 
 all: $(TESTS)
 
-$(BENCH).o : $(BENCH).c $(BENCH).h
-	$(CC) -o $@ $< $(CFLAGS) -c $(LDFLAGS)
+$(WILDCARD_TESTS): %_wildcard : %.cc $(BENCH)_wildcard.h 
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
-$(BENCH)_wildcard.o : $(BENCH)_wildcard.c $(BENCH).h
-	$(CC) -o $@ $< $(CFLAGS) -c $(LDFLAGS)
-
-$(WILDCARD_TESTS): %_wildcard : %.c $(BENCH)_wildcard.o 
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
-
-$(NORMAL_TESTS): % : %.c $(BENCH).o
-	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+$(NORMAL_TESTS): % : %.cc $(BENCH).h
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
 clean:
 	rm -f *.o *.d $(TESTS)
