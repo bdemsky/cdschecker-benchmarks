@@ -17,7 +17,7 @@ typedef struct seqlock {
 			int old_seq = _seq.load(memory_order_acquire); // acquire
 			if (old_seq % 2 == 1) continue;
 
-			int res = _data.load(memory_order_acquire); // acquire
+			int res = _data.load(memory_order_acquire); 
 			if (_seq.load(memory_order_relaxed) == old_seq) { // relaxed
 				return res;
 			}
@@ -25,20 +25,19 @@ typedef struct seqlock {
 	}
 	
 	void write(int new_data) {
+		int old_seq = _seq.load(memory_order_acquire); // acquire
 		while (true) {
 			// This might be a relaxed too
-			int old_seq = _seq.load(memory_order_acquire); // acquire
 			if (old_seq % 2 == 1)
 				continue; // Retry
 
-			// Should be relaxed!!! 
 			if (_seq.compare_exchange_strong(old_seq, old_seq + 1,
-				memory_order_relaxed, memory_order_relaxed)) // relaxed 
+				memory_order_acq_rel, memory_order_acquire)) 
 				break;
 		}
 
 		// Update the data
-		_data.store(new_data, memory_order_release); // release
+		_data.store(new_data, memory_order_release); // Can be relaxed
 
 		_seq.fetch_add(1, memory_order_release); // release
 	}
