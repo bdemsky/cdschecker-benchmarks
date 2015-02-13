@@ -1,7 +1,7 @@
 include ../benchmarks.mk
 
 TESTNAME = linuxrwlocks
-WILDCARD_TESTS = testcase1
+WILDCARD_TESTS = testcase1 testcase2 testcase_full
 all: $(TESTNAME) $(WILDCARD_TESTS)
 
 $(TESTNAME): $(TESTNAME).c $(TESTNAME).h

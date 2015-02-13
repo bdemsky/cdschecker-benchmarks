@@ -1,0 +1,8 @@
+We can run the testcase_full (a testcase that contains all the method calls of
+the data structure) to infer all the parameters in one file, but that takes a
+long time that is mainly spent on the model-checking for unknown wrong
+inferences. To make things faster, we could split the big testcase into small
+cases (plus corner cases) and then run each of them one after another.
+
+We ran testcase1 and then got inference result1.txt, then we ran testcase2 based
+on result1.txt, and we got result2.txt, which is the correct inference.

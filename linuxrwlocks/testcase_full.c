@@ -16,43 +16,26 @@ static void a(void *obj)
 	write_lock(&mylock);
 	atomic_store_explicit(&x, 17, relaxed);
 	write_unlock(&mylock);
-
-/*
-
-	if (!write_can_lock(&mylock))
-		return;
-
-	if (write_trylock(&mylock)) {
-		atomic_store_explicit(&x, 17, relaxed);
-		write_unlock(&mylock);
-	}
-*/
-}
-
-static void b(void *obj)
-{
-	if (write_trylock(&mylock)) {
-		atomic_store_explicit(&x, 16, relaxed);
-		write_unlock(&mylock);
-	}
-
-	read_lock(&mylock);
-	atomic_load_explicit(&x, relaxed);
-	read_unlock(&mylock);
-
-/*
-	if (write_trylock(&mylock)) {
-		atomic_store_explicit(&x, 16, relaxed);
-		write_unlock(&mylock);
-	}
-
+	
 	if (!read_can_lock(&mylock))
 		return;
 	if (read_trylock(&mylock)) {
 		atomic_load_explicit(&x, relaxed);
 		read_unlock(&mylock);
 	}
-*/
+}
+
+static void b(void *obj)
+{
+
+	if (write_trylock(&mylock)) {
+		atomic_store_explicit(&x, 16, relaxed);
+		write_unlock(&mylock);
+	}
+	
+	read_lock(&mylock);
+	atomic_load_explicit(&x, relaxed);
+	read_unlock(&mylock);
 }
 
 int user_main(int argc, char **argv)
