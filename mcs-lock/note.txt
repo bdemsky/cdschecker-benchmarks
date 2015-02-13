@@ -12,3 +12,14 @@ the gate and the later update of gate. From the inference analysis, we actually
 got two results, where wildcard(7) and wildcard(8) only need one acquire. That's
 actually the place to synchronize the update of gate. We can achieve it at the
 Tail or at the next field.
+
+To generate those results, we actually need to pass a specific option to the
+scfence analysis, as follows.
+
+*******************************************************
+peizhaoo@dw-2:~/model-checker$ ./run.sh mcs-lock/testcase1 -m2 -b100 -y -tSCFENCE -o m
+*******************************************************
+
+The '-b100' is to terminate the execution in case of infinite loops because of
+improper synchronization at the beginning period. The 'm' option for SCFENCE
+analysis is to turn on the implyMO mode.
