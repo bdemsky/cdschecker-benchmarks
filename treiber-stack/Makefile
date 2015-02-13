@@ -10,6 +10,7 @@ TESTS := $(NORMAL_TESTS) $(WILDCARD_TESTS)
 
 all: $(TESTS)
 
+$(WILDCARD_TESTS): CXXFLAGS += -DWILDCARD
 $(WILDCARD_TESTS): %_wildcard : %.cc $(BENCH)_wildcard.h 
 	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 

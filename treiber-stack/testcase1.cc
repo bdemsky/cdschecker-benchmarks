@@ -3,7 +3,11 @@
 #include <threads.h>
 #include "model-assert.h"
 
+#ifdef WILDCARD
+#include "stack_wildcard.h"
+#else
 #include "stack.h"
+#endif
 
 static int procs = 4;
 static stack *s;

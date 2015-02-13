@@ -8,7 +8,10 @@
 
 struct node {
 	unsigned int value;
-	node *next;
+	// This field does not have to be atomic, but in the inference analysis, we
+	// might have a data race for this field without the proper synchronization.
+	//node *next;
+	atomic<node*> next;
 
 	node(unsigned int v) {
 		value = v;
@@ -25,10 +28,11 @@ struct stack {
 
 	void push(unsigned int val) {
 		node *n = new node(val);
-		node *old = top.load(acquire);
+		node *old = top.load(relaxed);
 		do {
-			n->next = old;
-		} while (!top.compare_exchange_strong(old, n, acq_rel, relaxed));
+			// n->next = old;
+			n->next.store(old, relaxed);
+		} while (!top.compare_exchange_strong(old, n, release, relaxed));
 	}
 
 	unsigned int pop() {
@@ -37,8 +41,9 @@ struct stack {
 		do {
 			if (!old)
 				return 0;
-			n = old->next;
-		} while (!top.compare_exchange_strong(old, n, acq_rel, acquire));
+			//n = old->next;
+			n = old->next.load(relaxed);
+		} while (!top.compare_exchange_strong(old, n, relaxed, relaxed));
 		return old->value;
 	}
 };
