@@ -134,7 +134,7 @@ bool dequeue(queue_t *q, unsigned int *retVal)
 
 	while (!success) {
 		head = atomic_load_explicit(&q->head, wildcard(13)); // acquire
-		// FIXME: SCFence makes this acquire
+		// SCFence makes this acquire, and we actually need an acquire here!!!
 		tail = atomic_load_explicit(&q->tail, wildcard(14)); // relaxed 
 		next = atomic_load_explicit(&q->nodes[get_ptr(head)].next, wildcard(15)); // acquire
 		if (atomic_load_explicit(&q->head, wildcard(16)) == head) { // relaxed

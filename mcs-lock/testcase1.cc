@@ -7,25 +7,29 @@
 #include "librace.h"
 
 struct mcs_mutex *mutex;
-static uint32_t shared;
+static atomic_int shared;
 
 void threadA(void *arg)
 {
 	mcs_mutex::guard g(mutex);
 	printf("store: %d\n", 17);
-	store_32(&shared, 17);
+	//store_32(&shared, 17);
+	atomic_store_explicit(&shared, 17, relaxed);
 	mutex->unlock(&g);
 	mutex->lock(&g);
-	printf("load: %u\n", load_32(&shared));
+	//printf("load: %u\n", load_32(&shared));
+	atomic_load_explicit(&shared, relaxed);
 }
 
 void threadB(void *arg)
 {
 	mcs_mutex::guard g(mutex);
-	printf("load: %u\n", load_32(&shared));
+	//printf("load: %u\n", load_32(&shared));
+	atomic_load_explicit(&shared, relaxed);
 	mutex->unlock(&g);
 	mutex->lock(&g);
-	printf("store: %d\n", 17);
+	atomic_store_explicit(&shared, 17, relaxed);
+	//printf("store: %d\n", 17);
 	store_32(&shared, 17);
 }
 

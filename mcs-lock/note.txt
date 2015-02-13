@@ -1,0 +1,14 @@
+When lock() publishes the 'me' to the previous lock-holder
+	// prev->next.store(me, std::mo_release);
+, it must synchronize with the unlock()'s 
+	// me->next.load(std::mo_acquire);
+because otherwise when it's the lock()'s turn to lock, it is allowed to always
+read 1 in 
+	// me->gate.load(std::mo_acquire)
+such that it will end up with an infinite loop.
+
+To make this happen, we establish synchronization between the initialization of
+the gate and the later update of gate. From the inference analysis, we actually
+got two results, where wildcard(7) and wildcard(8) only need one acquire. That's
+actually the place to synchronize the update of gate. We can achieve it at the
+Tail or at the next field.

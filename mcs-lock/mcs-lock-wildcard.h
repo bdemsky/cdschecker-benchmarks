@@ -74,7 +74,7 @@ public:
 		{
 			mcs_node * tail_was_me = me;
 			bool success;
-			// FIXME: SCFence infers acq_rel / release
+			// SCFence infers acq_rel / release !!!
 			// Could be release if wildcard(8) is acquire
 			if ( (success = m_tail.compare_exchange_strong(
 				tail_was_me,NULL,wildcard(7))) ) { // acq_rel
@@ -85,7 +85,7 @@ public:
 			// (*1) catch the race :
 			rl::linear_backoff bo;
 			for(;;) {
-				// FIXME: SCFence infers relaxed / acquire
+				// SCFence infers relaxed / acquire!!!
 				// Could be relaxed if wildcard(7) is acq_rel
 				next = me->next.load(wildcard(8)); // acquire
 				if ( next != NULL )

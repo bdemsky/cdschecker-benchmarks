@@ -5,7 +5,7 @@
 #include "queue.h"
 #include "model-assert.h"
 
-static int procs = 2;
+static int procs = 4;
 static queue_t *queue;
 static thrd_t *threads;
 static unsigned int *input;
@@ -29,15 +29,19 @@ static void main_task(void *param)
 {
 	unsigned int val;
 	int pid = *((int *)param);
-	if (!pid) {
+	if (pid % 4 == 0) {
 		input[0] = 17;
 		enqueue(queue, input[0]);
 		succ1 = dequeue(queue, &output[0]);
 		//printf("Dequeue: %d\n", output[0]);
-	} else {
+	} else if (pid % 4 == 1) {
 		input[1] = 37;
 		enqueue(queue, input[1]);
 		succ2 = dequeue(queue, &output[1]);
+	} else if (pid % 4 == 2) {
+	
+	} else if (pid % 4 == 3) {
+
 	}
 }
 
@@ -63,7 +67,7 @@ int user_main(int argc, char **argv)
 	}
 	for (i = 0; i < num_threads; i++)
 		thrd_join(threads[i]);
-
+/*
 	for (i = 0; i < num_threads; i++) {
 		in_sum += input[i];
 		out_sum += output[i];
@@ -76,7 +80,7 @@ int user_main(int argc, char **argv)
 		MODEL_ASSERT(in_sum == out_sum);
 	else
 		MODEL_ASSERT (false);
-
+*/
 	free(param);
 	free(threads);
 	free(queue);

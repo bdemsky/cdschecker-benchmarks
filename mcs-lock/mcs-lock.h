@@ -69,7 +69,8 @@ public:
 		if ( next == NULL )
 		{
 			mcs_node * tail_was_me = me;
-			if ( m_tail.compare_exchange_strong( tail_was_me,NULL,std::mo_acq_rel) ) {
+			if ( m_tail.compare_exchange_strong(
+				tail_was_me,NULL,std::mo_release) ) {
 				// got null in tail, mutex is unlocked
 				return;
 			}
