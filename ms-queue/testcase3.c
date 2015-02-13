@@ -34,21 +34,23 @@ static void main_task(void *param)
 	if (pid % 4 == 0) {
 		atomic_store_explicit(&x[0], 1, memory_order_relaxed);
 		enqueue(queue, 0);
-	} else if (pid % 4 == 1) {
-		atomic_store_explicit(&x[1], 1, memory_order_relaxed);
-		enqueue(queue, 1);
-	} else if (pid % 4 == 2) {
+	
 		succ1 = dequeue(queue, &idx1);
 		if (succ1) {
 			atomic_load_explicit(&x[idx1], memory_order_relaxed);
 		}
-	} else if (pid % 4 == 3) {
-		/*
+	} else if (pid % 4 == 1) {
+		atomic_store_explicit(&x[1], 1, memory_order_relaxed);
+		enqueue(queue, 1);
+
 		succ2 = dequeue(queue, &idx2);
 		if (succ2) {
 			atomic_load_explicit(&x[idx2], memory_order_relaxed);
 		}
-		*/
+	} else if (pid % 4 == 2) {
+
+	} else if (pid % 4 == 3) {
+	
 	}
 }
 

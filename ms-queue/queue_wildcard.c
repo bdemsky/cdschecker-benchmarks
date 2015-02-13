@@ -103,12 +103,19 @@ void enqueue(queue_t *q, unsigned int val)
 
 			if (get_ptr(next) == 0) { // == NULL
 				pointer value = MAKE_POINTER(node, get_count(next) + 1);
+				
+				// ***********************************
+				// Inference analysis results have two choices here, it either
+				// makes wildcard(6) acq_rel and wildcard(8) relaxed or
+				// wildcard(6) release and wildcard(8) acquire. The
+				// synchronization here is for enqueue() to dequeue(), and
+				// actually either synchronization options will work!!!
 				success = atomic_compare_exchange_strong_explicit(&q->nodes[get_ptr(tail)].next,
 						&next, value, wildcard(6), wildcard(7)); // release & relaxed
 			}
 			if (!success) {
 				unsigned int ptr =
-				get_ptr(atomic_load_explicit(&q->nodes[get_ptr(tail)].next, wildcard(8))); // acquire
+					get_ptr(atomic_load_explicit(&q->nodes[get_ptr(tail)].next, wildcard(8))); // acquire
 				pointer value = MAKE_POINTER(ptr,
 						get_count(tail) + 1);
 				atomic_compare_exchange_strong_explicit(&q->tail,
@@ -154,7 +161,6 @@ bool dequeue(queue_t *q, unsigned int *retVal)
 			} else {
 				//value = load_32(&q->nodes[get_ptr(next)].value);
 				value = q->nodes[get_ptr(next)].value;
-				// FIXME: SCFence makes this relaxed 
 				success = atomic_compare_exchange_strong_explicit(&q->head,
 						&head, MAKE_POINTER(get_ptr(next), get_count(head) + 1),
 						wildcard(19), wildcard(20)); // release & relaxed

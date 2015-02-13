@@ -2,7 +2,7 @@ include ../benchmarks.mk
 
 BENCH := queue
 
-NORMAL_TESTS := testcase1
+NORMAL_TESTS := testcase1 testcase2
 
 WILDCARD_TESTS := $(patsubst %, %_wildcard, $(NORMAL_TESTS))
 
