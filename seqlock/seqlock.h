@@ -1,5 +1,6 @@
 #include <stdatomic.h>
 #include <threads.h>
+#include "common.h"
 
 typedef struct seqlock {
 	// Sequence for reader consistency check
@@ -25,14 +26,16 @@ typedef struct seqlock {
 	}
 	
 	void write(int new_data) {
-		int old_seq = _seq.load(memory_order_acquire); // acquire
 		while (true) {
+			// #1: either here or #2 must be acquire
+			int old_seq = _seq.load(memory_order_acquire); // acquire
 			// This might be a relaxed too
 			if (old_seq % 2 == 1)
 				continue; // Retry
 
+			// #2
 			if (_seq.compare_exchange_strong(old_seq, old_seq + 1,
-				memory_order_acq_rel, memory_order_acquire)) 
+				memory_order_relaxed, memory_order_relaxed)) 
 				break;
 		}
 

@@ -27,14 +27,14 @@ typedef struct seqlock {
 	}
 	
 	void write(int new_data) {
-		int old_seq = _seq.load(wildcard(4)); // acquire
 		while (true) {
+			int old_seq = _seq.load(wildcard(4)); // acquire
 			if (old_seq % 2 == 1)
 				continue; // Retry
 
 			// Should be relaxed!!! 
 			if (_seq.compare_exchange_strong(old_seq, old_seq + 1,
-				wildcard(5), wildcard(6))) // relaxed 
+				wildcard(5), wildcard(6))) // relaxed  
 				break;
 		}
 

@@ -1,0 +1,6 @@
+Inference results for this benchmark are consistent with the manual analysis.
+In the write() function, either the load of _seq at the very beginning or the CAS
+of the _seq when it succeeds must be acquire such that it establishes
+synchronization between two contiguous write(). If not, the two _data.store
+operations are not ordered by hb, and the next read() can read either, thus
+allowing reading the wrong (old) value.

@@ -11,10 +11,10 @@ static void a(void *obj) {
 
 static void b(void *obj) {
 	lock->write(2);
+	int r1 = lock->read();
 }
 
 static void c(void *obj) {
-	lock->write(2);
 	int r1 = lock->read();
 }
 
@@ -23,11 +23,11 @@ int user_main(int argc, char **argv) {
 	lock = new seqlock_t();
 
 	thrd_create(&t1, (thrd_start_t)&a, NULL);
-	//thrd_create(&t2, (thrd_start_t)&b, NULL);
-	thrd_create(&t3, (thrd_start_t)&c, NULL);
+	thrd_create(&t2, (thrd_start_t)&b, NULL);
+	//thrd_create(&t3, (thrd_start_t)&c, NULL);
 
 	thrd_join(t1);
-	//thrd_join(t2);
-	thrd_join(t3);
+	thrd_join(t2);
+	//thrd_join(t3);
 	return 0;
 }
