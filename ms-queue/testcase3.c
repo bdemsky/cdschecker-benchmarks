@@ -25,28 +25,36 @@ int get_thread_num()
 bool succ1, succ2;
 atomic_int x[3];
 int idx1, idx2;
+unsigned int reclaimNode1, reclaimNode2;
 
-static int procs = 4;
+static int procs = 2;
 static void main_task(void *param)
 {
 	unsigned int val;
 	int pid = *((int *)param);
 	if (pid % 4 == 0) {
-		atomic_store_explicit(&x[0], 1, memory_order_relaxed);
-		enqueue(queue, 0);
+		//atomic_store_explicit(&x[0], 1, memory_order_relaxed);
+		enqueue(queue, 0, true);
 	
-		succ1 = dequeue(queue, &idx1);
-		if (succ1) {
-			atomic_load_explicit(&x[idx1], memory_order_relaxed);
-		}
+	
 	} else if (pid % 4 == 1) {
-		atomic_store_explicit(&x[1], 1, memory_order_relaxed);
-		enqueue(queue, 1);
+		//atomic_store_explicit(&x[1], 1, memory_order_relaxed);
+		enqueue(queue, 1, false);
+		enqueue(queue, 1, false);
 
-		succ2 = dequeue(queue, &idx2);
-		if (succ2) {
-			atomic_load_explicit(&x[idx2], memory_order_relaxed);
+		succ1 = dequeue(queue, &idx1, &reclaimNode1);
+		if (succ1) {
+			//atomic_load_explicit(&x[idx1], memory_order_relaxed);
 		}
+
+		succ2 = dequeue(queue, &idx2, &reclaimNode2);
+		if (succ2) {
+			//atomic_load_explicit(&x[idx2], memory_order_relaxed);
+		}
+		simulateRecycledNodeUpdate(queue, reclaimNode1);
+		
+
+
 	} else if (pid % 4 == 2) {
 
 	} else if (pid % 4 == 3) {

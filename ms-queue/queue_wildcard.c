@@ -32,6 +32,12 @@ static unsigned int new_node()
 	return 0;
 }
 
+/* Simulate the fact that when a node got recycled, it will get assigned to the
+ * same queue or for other usage */
+void simulateRecycledNodeUpdate(queue_t *q, unsigned int node) {
+	atomic_store_explicit(&q->nodes[node].next, -1, memory_order_release);
+}
+
 /* Place this node index back on this thread's free list */
 static void reclaim(unsigned int node)
 {
@@ -77,7 +83,7 @@ void init_queue(queue_t *q, int num_threads)
 	atomic_init(&q->nodes[1].next, MAKE_POINTER(0, 0));
 }
 
-void enqueue(queue_t *q, unsigned int val)
+void enqueue(queue_t *q, unsigned int val, bool yield)
 {
 	int success = 0;
 	unsigned int node;
@@ -94,7 +100,9 @@ void enqueue(queue_t *q, unsigned int val)
 
 	while (!success) {
 		tail = atomic_load_explicit(&q->tail, wildcard(3)); // acquire
-		// FIXME: SCFence makes this relaxed 
+		// FIXME: SCFence makes this relaxed
+		if (yield)
+			thrd_yield();
 		next = atomic_load_explicit(&q->nodes[get_ptr(tail)].next, wildcard(4)); //acquire
 		if (tail == atomic_load_explicit(&q->tail, wildcard(5))) { // relaxed
 
@@ -103,13 +111,6 @@ void enqueue(queue_t *q, unsigned int val)
 
 			if (get_ptr(next) == 0) { // == NULL
 				pointer value = MAKE_POINTER(node, get_count(next) + 1);
-				
-				// ***********************************
-				// Inference analysis results have two choices here, it either
-				// makes wildcard(6) acq_rel and wildcard(8) relaxed or
-				// wildcard(6) release and wildcard(8) acquire. The
-				// synchronization here is for enqueue() to dequeue(), and
-				// actually either synchronization options will work!!!
 				success = atomic_compare_exchange_strong_explicit(&q->nodes[get_ptr(tail)].next,
 						&next, value, wildcard(6), wildcard(7)); // release & relaxed
 			}
@@ -131,7 +132,7 @@ void enqueue(queue_t *q, unsigned int val)
 			wildcard(11), wildcard(12)); // release & relaxed
 }
 
-bool dequeue(queue_t *q, unsigned int *retVal)
+bool dequeue(queue_t *q, unsigned int *retVal, unsigned int *reclaimNode)
 {
 	unsigned int value;
 	int success = 0;
@@ -169,6 +170,8 @@ bool dequeue(queue_t *q, unsigned int *retVal)
 			}
 		}
 	}
+
+	reclaimNode = get_ptr(head);
 	reclaim(get_ptr(head));
 	*retVal = value;
 	return true;

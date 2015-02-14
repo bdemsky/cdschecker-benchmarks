@@ -22,10 +22,13 @@ typedef struct node {
 typedef struct {
 	pointer_t head;
 	pointer_t tail;
-	node_t nodes[MAX_NODES + 1];
+	node_t nodes[MAX_NODES + 2];
 } queue_t;
 
 void init_queue(queue_t *q, int num_threads);
-void enqueue(queue_t *q, unsigned int val);
-bool dequeue(queue_t *q, unsigned int *retVal);
+void enqueue(queue_t *q, unsigned int val, bool yield);
+bool dequeue(queue_t *q, unsigned int *retVal, unsigned int *reclaimedNode);
+
+void simulateRecycledNodeUpdate(queue_t *q, unsigned int node);
+
 int get_thread_num();

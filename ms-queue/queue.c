@@ -33,6 +33,13 @@ static unsigned int new_node()
 	return 0;
 }
 
+/* Simulate the fact that when a node got recycled, it will get assigned to the
+ * same queue or for other usage */
+void simulateRecycledNodeUpdate(queue_t *q, unsigned int node) {
+	atomic_store_explicit(&q->nodes[node].next, -1, memory_order_release);
+}
+
+
 /* Place this node index back on this thread's free list */
 static void reclaim(unsigned int node)
 {
@@ -76,7 +83,7 @@ void init_queue(queue_t *q, int num_threads)
 	atomic_init(&q->nodes[1].next, MAKE_POINTER(0, 0));
 }
 
-void enqueue(queue_t *q, unsigned int val)
+void enqueue(queue_t *q, unsigned int val, bool yield)
 {
 	int success = 0;
 	unsigned int node;
@@ -120,7 +127,7 @@ void enqueue(queue_t *q, unsigned int val)
 			release, release);
 }
 
-bool dequeue(queue_t *q, unsigned int *retVal)
+bool dequeue(queue_t *q, unsigned int *retVal, unsigned int *reclaimNode)
 {
 	int success = 0;
 	pointer head;
@@ -156,6 +163,7 @@ bool dequeue(queue_t *q, unsigned int *retVal)
 			}
 		}
 	}
+	reclaimNode = get_ptr(head);
 	reclaim(get_ptr(head));
 	return true;
 }

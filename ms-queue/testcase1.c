@@ -25,6 +25,7 @@ int get_thread_num()
 bool succ1, succ2;
 atomic_int x[3];
 int idx1, idx2;
+unsigned int reclaimNode;
 
 static int procs = 4;
 static void main_task(void *param)
@@ -33,18 +34,18 @@ static void main_task(void *param)
 	int pid = *((int *)param);
 	if (pid % 4 == 0) {
 		atomic_store_explicit(&x[0], 1, memory_order_relaxed);
-		enqueue(queue, 0);
+		enqueue(queue, 0, false);
 	} else if (pid % 4 == 1) {
 		atomic_store_explicit(&x[1], 1, memory_order_relaxed);
-		enqueue(queue, 1);
+		enqueue(queue, 1, false);
 	} else if (pid % 4 == 2) {
-		succ1 = dequeue(queue, &idx1);
+		succ1 = dequeue(queue, &idx1, &reclaimNode);
 		if (succ1) {
 			atomic_load_explicit(&x[idx1], memory_order_relaxed);
 		}
 	} else if (pid % 4 == 3) {
 		/*
-		succ2 = dequeue(queue, &idx2);
+		succ2 = dequeue(queue, &idx2, &reclaimNode);
 		if (succ2) {
 			atomic_load_explicit(&x[idx2], memory_order_relaxed);
 		}
