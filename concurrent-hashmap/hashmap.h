@@ -165,10 +165,9 @@ class HashMap {
 		// lock, we ignore this operation for the SC analysis, and otherwise we
 		// take it into consideration
 		
-		//SC_BEGIN();
+		SC_BEGIN();
 		Entry *firstPtr = first->load(acquire);
-		//SC_KEEP();
-		//SC_END();
+		SC_END();
 
 		e = firstPtr;
 		while (e != NULL) {
@@ -179,8 +178,9 @@ class HashMap {
 				else
 					break;
 			}
-			// Loading the next entry
-			e = e->next.load(acquire);
+			// Loading the next entry, this can be relaxed because the
+			// synchronization has been established by the load of head
+			e = e->next.load(relaxed);
 		}
 	
 		// Recheck under synch if key apparently not there or interference
@@ -194,7 +194,8 @@ class HashMap {
 			e = newFirstPtr;
 			while (e != NULL) {
 				if (e->hash == hash && eq(key, e->key)) {
-					res = e->value.load(seq_cst);
+					// Protected by lock, no need to be SC
+					res = e->value.load(relaxed);
 					seg->unlock(); // Critical region ends
 					return res;
 				}
@@ -228,8 +229,8 @@ class HashMap {
 		while (e != NULL) {
 			if (e->hash == hash && eq(key, e->key)) {
 				// FIXME: This could be a relaxed (because locking synchronize
-				// with the previous put())?? 
-				oldValue = e->value.load(acquire);
+				// with the previous put())??  no need to be acquire
+				oldValue = e->value.load(relaxed);
 				e->value.store(value, seq_cst);
 				seg->unlock(); // Don't forget to unlock before return
 				return oldValue;
@@ -276,8 +277,8 @@ class HashMap {
 		}
 
 		// FIXME: This could be a relaxed (because locking synchronize
-		// with the previous put())?? 
-		oldValue = e->value.load(acquire);
+		// with the previous put())?? No need to be acquire
+		oldValue = e->value.load(relaxed);
 		// If the value parameter is NULL, we will remove the entry anyway
 		if (value != NULL && value->equals(oldValue)) {
 			seg->unlock();

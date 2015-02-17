@@ -167,7 +167,6 @@ class HashMap {
 		
 		SC_BEGIN();
 		Entry *firstPtr = first->load(wildcard(3)); // acquire
-		SC_KEEP();
 		SC_END();
 
 		e = firstPtr;
@@ -180,7 +179,7 @@ class HashMap {
 					break;
 			}
 			// Loading the next entry
-			e = e->next.load(wildcard(5)); // acquire
+			e = e->next.load(wildcard(5)); // relaxed 
 		}
 	
 		// Recheck under synch if key apparently not there or interference
@@ -194,7 +193,7 @@ class HashMap {
 			e = newFirstPtr;
 			while (e != NULL) {
 				if (e->hash == hash && eq(key, e->key)) {
-					res = e->value.load(wildcard(7)); // seq_cst
+					res = e->value.load(wildcard(7)); // relaxed
 					seg->unlock(); // Critical region ends
 					return res;
 				}
@@ -229,7 +228,7 @@ class HashMap {
 			if (e->hash == hash && eq(key, e->key)) {
 				// FIXME: This could be a relaxed (because locking synchronize
 				// with the previous put())?? 
-				oldValue = e->value.load(wildcard(10)); // acquire
+				oldValue = e->value.load(wildcard(10)); // relaxed 
 				e->value.store(value, wildcard(11)); // seq_cst
 				seg->unlock(); // Don't forget to unlock before return
 				return oldValue;
@@ -277,7 +276,7 @@ class HashMap {
 
 		// FIXME: This could be a relaxed (because locking synchronize
 		// with the previous put())?? 
-		oldValue = e->value.load(acquire);
+		oldValue = e->value.load(relaxed);
 		// If the value parameter is NULL, we will remove the entry anyway
 		if (value != NULL && value->equals(oldValue)) {
 			seg->unlock();
