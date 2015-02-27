@@ -1,0 +1,8 @@
+We first ran dekker-fences-wildcard1 to get result1.txt, then we we run
+dekker-fences-wildcard2 to get get result2.txt. In result2.txt, those results
+that do not impose ordering to fences should be dropped, so we got the correct
+result.
+
+./run.sh benchmarks/dekker-fences/dekker-fences-wildcard1 -m2 -y -x500 -tSCFENCE &> result1.txt
+
+./run.sh benchmarks/dekker-fences/dekker-fences-wildcard2 -m2 -y -x150 -tSCFENCE -o fresult1.txt

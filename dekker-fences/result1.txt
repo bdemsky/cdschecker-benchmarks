@@ -1,0 +1,83 @@
+Result 0:
+wildcard 1 -> memory_order_relaxed
+wildcard 2 -> memory_order_seq_cst
+wildcard 3 -> memory_order_relaxed
+wildcard 4 -> memory_order_relaxed
+wildcard 5 -> memory_order_relaxed
+wildcard 6 -> memory_order_relaxed
+wildcard 7 -> memory_order_relaxed
+wildcard 8 -> memory_order_relaxed
+wildcard 9 -> memory_order_acquire
+wildcard 10 -> memory_order_relaxed
+wildcard 11 -> memory_order_release
+wildcard 12 -> memory_order_relaxed
+
+Result 1:
+wildcard 1 -> memory_order_relaxed
+wildcard 2 -> memory_order_seq_cst
+wildcard 3 -> memory_order_acquire
+wildcard 4 -> memory_order_relaxed
+wildcard 5 -> memory_order_relaxed
+wildcard 6 -> memory_order_relaxed
+wildcard 7 -> memory_order_relaxed
+wildcard 8 -> memory_order_relaxed
+wildcard 9 -> memory_order_relaxed
+wildcard 10 -> memory_order_relaxed
+wildcard 11 -> memory_order_release
+wildcard 12 -> memory_order_relaxed
+
+Result 2:
+wildcard 1 -> memory_order_relaxed
+wildcard 2 -> memory_order_seq_cst
+wildcard 3 -> memory_order_relaxed
+wildcard 4 -> memory_order_relaxed
+wildcard 5 -> memory_order_relaxed
+wildcard 6 -> memory_order_relaxed
+wildcard 7 -> memory_order_relaxed
+wildcard 8 -> memory_order_relaxed
+wildcard 9 -> memory_order_acquire
+wildcard 10 -> memory_order_relaxed
+wildcard 11 -> memory_order_relaxed
+wildcard 12 -> memory_order_release
+
+Result 3:
+wildcard 1 -> memory_order_relaxed
+wildcard 2 -> memory_order_seq_cst
+wildcard 3 -> memory_order_acquire
+wildcard 4 -> memory_order_relaxed
+wildcard 5 -> memory_order_relaxed
+wildcard 6 -> memory_order_relaxed
+wildcard 7 -> memory_order_relaxed
+wildcard 8 -> memory_order_relaxed
+wildcard 9 -> memory_order_relaxed
+wildcard 10 -> memory_order_relaxed
+wildcard 11 -> memory_order_relaxed
+wildcard 12 -> memory_order_release
+
+Result 4:
+wildcard 1 -> memory_order_seq_cst
+wildcard 2 -> memory_order_relaxed
+wildcard 3 -> memory_order_seq_cst
+wildcard 4 -> memory_order_relaxed
+wildcard 5 -> memory_order_relaxed
+wildcard 6 -> memory_order_relaxed
+wildcard 7 -> memory_order_relaxed
+wildcard 8 -> memory_order_relaxed
+wildcard 9 -> memory_order_seq_cst
+wildcard 10 -> memory_order_relaxed
+wildcard 11 -> memory_order_release
+wildcard 12 -> memory_order_relaxed
+
+Result 5:
+wildcard 1 -> memory_order_seq_cst
+wildcard 2 -> memory_order_relaxed
+wildcard 3 -> memory_order_seq_cst
+wildcard 4 -> memory_order_relaxed
+wildcard 5 -> memory_order_relaxed
+wildcard 6 -> memory_order_relaxed
+wildcard 7 -> memory_order_relaxed
+wildcard 8 -> memory_order_relaxed
+wildcard 9 -> memory_order_seq_cst
+wildcard 10 -> memory_order_relaxed
+wildcard 11 -> memory_order_relaxed
+wildcard 12 -> memory_order_release
