@@ -1,0 +1,28 @@
+#1: Ordering parameters
+
+wildcard8 -> sc (fence in take())
+wildcard12 -> sc (update of top in take())
+*wildcard23 -> release (update of array in resize())
+wildcard25 -> acquire (load of top in push())
+*wildcard31 -> release (fence in push())
+wildcard33 -> acquire (load of top in steal())
+wildcard34 -> sc (fence in steal())
+*wildcard35 -> acquire (load of bottom in steal())
+*wildcard36 -> acquire (load of array in steal())
+wildcard39 -> sc (update of top in steal())
+
+#1:
+wildcard23 -> release
+wildcard36 -> acquire
+Update of array in resize(), should be release; since only steal() need to
+establish hb, so in steal wildcard36 should be acquire.
+
+wildcard31 -> release (fence) 
+wildcard35 -> acquire
+Establish hb between push() and steal() via the variable bottom. 
+
+wildcard33 -> acquire
+wildcard12 -> release (at least)
+Establish hb between take() and steal() when there's only one element in the
+deque, and take() gets the last element. The hb ensures that the steal() will
+see the updated bottom in take().
