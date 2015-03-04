@@ -1,0 +1,2 @@
+This is the example used in the scfence example section in the paper.
+We need to deal with the problem of data races.
