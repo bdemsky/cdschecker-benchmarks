@@ -27,9 +27,9 @@ int user_main(int argc, char **argv)
 	thrd_create(&t1, task, 0);
 	//thrd_create(&t2, task, 0);
 	push(q, 2);
-	//push(q, 3);
-	//a=take(q);
-	//c=take(q);
+	push(q, 3);
+	a=take(q);
+	c=take(q);
 	thrd_join(t1);
 	//thrd_join(t2);
 
