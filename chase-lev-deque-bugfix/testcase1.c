@@ -13,24 +13,28 @@ int a;
 int b;
 int c;
 
+atomic_int x[2];
+
 static void task(void * param) {
-	b=steal(q);
-	c=steal(q);
+	a=steal(q);
+	printf("a=%d\n", a);
+	if (a != EMPTY && a != ABORT)
+		atomic_load_explicit(&x[a], memory_order_relaxed);
 }
 
 int user_main(int argc, char **argv)
 {
-	thrd_t t1, t2;
+	thrd_t t;
+	atomic_store_explicit(&x[0], 0,  memory_order_relaxed);
+	atomic_store_explicit(&x[1], 0,  memory_order_relaxed);
 	q=create_size(4);
+	thrd_create(&t, task, 0);
+	//atomic_store_explicit(&x[1], 37,  memory_order_relaxed);
 	push(q, 1);
-	push(q, 2);
-	push(q, 3);
-	thrd_create(&t1, task, 0);
-	//thrd_create(&t2, task, 0);
-	a=take(q);
+	//push(q, 4);
+	//b=take(q);
 	//c=take(q);
-	thrd_join(t1);
-	//thrd_join(t2);
+	thrd_join(t);
 
 /*
 	bool correct=true;

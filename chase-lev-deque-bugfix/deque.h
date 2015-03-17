@@ -11,6 +11,7 @@ typedef struct {
 	atomic_uintptr_t array; /* Atomic(Array *) */
 } Deque;
 
+Deque * create_size(int size);
 Deque * create();
 int take(Deque *q);
 void resize(Deque *q);

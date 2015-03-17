@@ -12,17 +12,44 @@ wildcard34 -> sc (fence in steal())
 wildcard39 -> sc (update of top in steal())
 
 #1:
+wildcard31 -> release (fence) 
+wildcard35 -> acquire
+Establish hb between push() and steal() via the variable bottom.
+**************** testcase1.c ****************
+
+#2:
+wildcard8 -> sc (fence)
+wildcard34 -> sc (fence)
+When there are two consecutive steal() in the same thread, and another take() in
+another thread. The first steal() updates the top, and then gets the
+fence(wildcard34) in the second steal(), then it loads bottom (wildcard35). At
+the same time, in take() it first updates bottom (wildcard7), gets the fence (
+wildcard8) and then loads the top (wildcard9), as follows.
+
+t.CAS (w39 in first steal())         b.store (w7 in take())
+fence (w34 in second steal())        fence (w8 in take())
+b.load (w35 in second steal())       t.load (w9 in take())
+Both loads can reads old value, so it makes both fences seq_cst.
+**************** testcase2.c ****************
+
+#3:
 wildcard23 -> release
 wildcard36 -> acquire
 Update of array in resize(), should be release; since only steal() need to
 establish hb, so in steal wildcard36 should be acquire.
+**************** testcase4.c ****************
 
-wildcard31 -> release (fence) 
-wildcard35 -> acquire
-Establish hb between push() and steal() via the variable bottom. 
+#5:
+wildcard25 -> acquire
+wildcard39 -> release (at least)
+Establish hb between steal() and push() when steal() loads bottom (w35) and uses
+CAS (w39) to update the top, and push() reads the top (w25) and updates bottom
+(w32). If not, w35 can read from w39 (future value).
+**************** testcase5.c ****************
 
-wildcard33 -> acquire
+wildcard33 -> acquire 
 wildcard12 -> release (at least)
 Establish hb between take() and steal() when there's only one element in the
 deque, and take() gets the last element. The hb ensures that the steal() will
-see the updated bottom in take().
+see the updated bottom in take(). However, since fence (w34) is SC, w33 MAY be
+relaxed.

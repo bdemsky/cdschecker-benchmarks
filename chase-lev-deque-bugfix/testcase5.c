@@ -15,19 +15,20 @@ int c;
 
 static void task(void * param) {
 	b=steal(q);
-	c=steal(q);
+	//c=steal(q);
 }
 
 int user_main(int argc, char **argv)
 {
 	thrd_t t1, t2;
-	q=create_size(4);
+	q=create();
+
 	push(q, 1);
-	push(q, 2);
-	push(q, 3);
 	thrd_create(&t1, task, 0);
 	//thrd_create(&t2, task, 0);
-	a=take(q);
+	push(q, 2);
+	//push(q, 3);
+	//a=take(q);
 	//c=take(q);
 	thrd_join(t1);
 	//thrd_join(t2);
