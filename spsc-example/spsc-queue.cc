@@ -1,40 +1,38 @@
 #include <threads.h>
 #include <atomic>
 
-//#include "queue.h"
+#include "wildcard.h" 
 
 using namespace std;
-#define acquire memory_order_acquire
-#define release memory_order_release
-#define relaxed memory_order_relaxed
 
 struct node {
-	node(int d): data(d) {
-		next.store(0, relaxed);
+	node(int d) {
+		data.store(d, memory_order_normal);
+		next.store(0, wildcard(1));
 	}
 	atomic<node*> next;
-	int data;
+	atomic_int data;
 };
 
 class spsc_queue { 
 	atomic<node*> head, tail;/*@ \label{line:spscBegin} @*/
 	public:
 	spsc_queue() {
-		head = tail = new node(0);
+		head = tail = new node(-1);
 	}
 	void enqueue(int val) {
 		node* n = new node(val);
-		node *h = head.load(relaxed); 
-		h->next.store(n, release);/*@ \label{line:spscRelease} @*/
-		head.store(n, relaxed);
+		node *h = head.load(wildcard(2)); 
+		h->next.store(n, wildcard(3));/*@ \label{line:spscRelease} @*/
+		head.store(n, wildcard(4));
 	}
 	bool dequeue(int *v) {
-		node* t = tail.load(relaxed);
-		node* n = t->next.load(acquire);/*@ \label{line:spscAcquire} @*/
+		node* t = tail.load(wildcard(5));
+		node* n = t->next.load(wildcard(6));/*@ \label{line:spscAcquire} @*/
 		if (0 == n)
 			return false;
-		*v = n->data;
-		tail.store(n, relaxed);
+		*v = n->data.load(memory_order_normal);
+		tail.store(n, wildcard(7));
 		delete (t);
 		return true;
 	}
