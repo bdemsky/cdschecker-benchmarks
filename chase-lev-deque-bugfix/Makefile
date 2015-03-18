@@ -2,7 +2,7 @@ include ../benchmarks.mk
 
 BENCH := deque
 
-NORMAL_TESTS := testcase1 testcase2 testcase3 testcase4 testcase5 testcase6 testcase7
+NORMAL_TESTS := testcase1 testcase2 testcase3 testcase4 testcase5 testcase6 testcase7 testcase8
 
 WILDCARD_TESTS := $(patsubst %, %_wildcard, $(NORMAL_TESTS))
 
