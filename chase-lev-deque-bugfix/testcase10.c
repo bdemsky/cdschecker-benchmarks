@@ -13,32 +13,31 @@ int a;
 int b;
 int c;
 
-atomic_int x[2];
+static void task1(void * param) {
+	b=steal(q);
+	//c=steal(q);
+}
 
-/**
-	Synchronization between plain push and steal
-*/
-
-static void task(void * param) {
-	a=steal(q);
-	printf("a=%d\n", a);
-	if (a != EMPTY && a != ABORT)
-		atomic_load_explicit(&x[a], memory_order_relaxed);
+static void task2(void * param) {
+	b=steal(q);
+	//c=steal(q);
 }
 
 int user_main(int argc, char **argv)
 {
-	thrd_t t;
-	atomic_store_explicit(&x[0], 0,  memory_order_relaxed);
-	atomic_store_explicit(&x[1], 0,  memory_order_relaxed);
-	q=create_size(4);
-	thrd_create(&t, task, 0);
-	//atomic_store_explicit(&x[1], 37,  memory_order_relaxed);
+	thrd_t t1, t2;
+	q=create();
+
 	push(q, 1);
-	//push(q, 4);
-	//b=take(q);
+	thrd_create(&t1, task1, 0);
+	thrd_create(&t2, task2, 0);
+	a=take(q);
+	//push(q, 2);
 	//c=take(q);
-	thrd_join(t);
+	//push(q, 2);
+	//push(q, 3);
+	thrd_join(t1);
+	thrd_join(t2);
 
 /*
 	bool correct=true;

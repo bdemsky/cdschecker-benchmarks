@@ -28,8 +28,8 @@ int take(Deque *q) {
 	size_t b = atomic_load_explicit(&q->bottom, memory_order_relaxed) - 1;
 	Array *a = (Array *) atomic_load_explicit(&q->array, memory_order_relaxed);
 	atomic_store_explicit(&q->bottom, b, memory_order_relaxed);
-	atomic_thread_fence(memory_order_relaxed); // sc
-	size_t t = atomic_load_explicit(&q->top, memory_order_relaxed);
+	atomic_thread_fence(memory_order_seq_cst); // sc
+	size_t t = atomic_load_explicit(&q->top, memory_order_release);
 	int x;
 	if (t <= b) {
 		/* Non-empty queue. */
@@ -61,13 +61,13 @@ void resize(Deque *q) {
 	for(i=top; i < bottom; i++) {
 		atomic_store_explicit(&new_a->buffer[i % new_size], atomic_load_explicit(&a->buffer[i % size], memory_order_relaxed), memory_order_relaxed);
 	}
-	atomic_store_explicit(&q->array, new_a, memory_order_relaxed); // release
+	atomic_store_explicit(&q->array, new_a, memory_order_release); // release
 	printf("resize\n");
 }
 
 void push(Deque *q, int x) {
 	size_t b = atomic_load_explicit(&q->bottom, memory_order_relaxed);
-	size_t t = atomic_load_explicit(&q->top, memory_order_relaxed); // acquire
+	size_t t = atomic_load_explicit(&q->top, memory_order_acquire); // acquire
 	Array *a = (Array *) atomic_load_explicit(&q->array, memory_order_relaxed);
 	if (b - t > atomic_load_explicit(&a->size, memory_order_relaxed) - 1) /* Full queue. */ {
 		resize(q);
@@ -75,21 +75,21 @@ void push(Deque *q, int x) {
 		a = (Array *) atomic_load_explicit(&q->array, memory_order_relaxed);
 	}
 	atomic_store_explicit(&a->buffer[b % atomic_load_explicit(&a->size, memory_order_relaxed)], x, memory_order_relaxed);
-	atomic_thread_fence(memory_order_relaxed); // release
+	atomic_thread_fence(memory_order_release); // release
 	atomic_store_explicit(&q->bottom, b + 1, memory_order_relaxed);
 }
 
 int steal(Deque *q) {
 	size_t t = atomic_load_explicit(&q->top, memory_order_relaxed); // acquire
-	atomic_thread_fence(memory_order_relaxed); // sc
-	size_t b = atomic_load_explicit(&q->bottom, memory_order_relaxed); // acquire
+	atomic_thread_fence(memory_order_seq_cst); // sc
+	size_t b = atomic_load_explicit(&q->bottom, memory_order_acquire); // acquire
 	int x = EMPTY;
 	if (t < b) {
 		/* Non-empty queue. */
-		Array *a = (Array *) atomic_load_explicit(&q->array, memory_order_relaxed); // acquire
+		Array *a = (Array *) atomic_load_explicit(&q->array, memory_order_acquire); // acquire
 		x = atomic_load_explicit(&a->buffer[t % atomic_load_explicit(&a->size, memory_order_relaxed)], memory_order_relaxed);
 		if (!atomic_compare_exchange_strong_explicit(&q->top, &t, t + 1,
-			memory_order_release, memory_order_relaxed)) // sc
+			memory_order_seq_cst, memory_order_relaxed)) // sc
 			/* Failed race. */
 			return ABORT;
 	}

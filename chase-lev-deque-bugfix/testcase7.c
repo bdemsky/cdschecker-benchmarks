@@ -13,9 +13,13 @@ int a;
 int b;
 int c;
 
-static void task(void * param) {
+static void task1(void * param) {
 	b=steal(q);
-	//c=steal(q);
+}
+
+static void task2(void * param) {
+	b=steal(q);
+	c=steal(q);
 }
 
 int user_main(int argc, char **argv)
@@ -25,11 +29,11 @@ int user_main(int argc, char **argv)
 
 	push(q, 1);
 	push(q, 2);
-	push(q, 3);
-	thrd_create(&t1, task, 0);
-	thrd_create(&t2, task, 0);
+	thrd_create(&t1, task1, 0);
+	thrd_create(&t2, task2, 0);
+	//push(q, 3);
 	a=take(q);
-	c=take(q);
+	//c=take(q);
 	thrd_join(t1);
 	thrd_join(t2);
 
