@@ -10,9 +10,9 @@ wildcard 8 -> memory_order_seq_cst
 wildcard 9 -> memory_order_acquire
 wildcard 10 -> memory_order_relaxed
 wildcard 11 -> memory_order_relaxed
-wildcard 12 -> memory_order_seq_cst
-wildcard 14 -> memory_order_relaxed
-wildcard 15 -> memory_order_relaxed
+wildcard 12 -> memory_order_acquire
+wildcard 14 -> memory_order_release
+wildcard 15 -> memory_order_release
 wildcard 16 -> memory_order_relaxed
 wildcard 17 -> memory_order_relaxed
 wildcard 18 -> memory_order_relaxed

@@ -13,6 +13,9 @@ int a;
 int b;
 int c;
 
+/** Making either w7 release or w9 acquire, the previously nos-SCness in the SC
+ *  analysis */
+
 static void task(void * param) {
 	b=steal(q);
 }
@@ -22,9 +25,9 @@ int user_main(int argc, char **argv)
 	thrd_t t1, t2;
 	q=create();
 
+	thrd_create(&t1, task, 0);
 	push(q, 1);
 	push(q, 2);
-	thrd_create(&t1, task, 0);
 	push(q, 3);
 	//thrd_create(&t2, task, 0);
 	//a=take(q);

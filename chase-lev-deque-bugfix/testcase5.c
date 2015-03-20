@@ -13,7 +13,14 @@ int a;
 int b;
 int c;
 
-static void task(void * param) {
+/** Making w14 release */
+
+static void task1(void * param) {
+	b=steal(q);
+	//c=steal(q);
+}
+
+static void task2(void * param) {
 	b=steal(q);
 	//c=steal(q);
 }
@@ -24,14 +31,15 @@ int user_main(int argc, char **argv)
 	q=create();
 
 	push(q, 1);
-	thrd_create(&t1, task, 0);
-	//thrd_create(&t2, task, 0);
-	push(q, 2);
-	push(q, 3);
+	thrd_create(&t1, task1, 0);
+	thrd_create(&t2, task2, 0);
 	a=take(q);
+	push(q, 2);
 	c=take(q);
+	//push(q, 2);
+	//push(q, 3);
 	thrd_join(t1);
-	//thrd_join(t2);
+	thrd_join(t2);
 
 /*
 	bool correct=true;

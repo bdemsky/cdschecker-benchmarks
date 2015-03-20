@@ -13,25 +13,27 @@ int a;
 int b;
 int c;
 
+/** Making CAS in steal() (w39) SC */
+
 static void task(void * param) {
-	a=steal(q);
-	printf("steal a=%d\n", a);
+	b=steal(q);
+	//c=steal(q);
 }
 
 int user_main(int argc, char **argv)
 {
 	thrd_t t1, t2;
 	q=create();
+
 	push(q, 1);
+	push(q, 2);
+	push(q, 3);
 	thrd_create(&t1, task, 0);
-	//thrd_create(&t2, task, 0);
-	//push(q, 2);
-	//push(q, 4);
-	b=take(q);
-	printf("take b=%d\n", b);
+	thrd_create(&t2, task, 0);
+	a=take(q);
 	//c=take(q);
 	thrd_join(t1);
-	//thrd_join(t2);
+	thrd_join(t2);
 
 /*
 	bool correct=true;

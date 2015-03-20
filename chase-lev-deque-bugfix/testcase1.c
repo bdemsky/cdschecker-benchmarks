@@ -16,7 +16,8 @@ int c;
 atomic_int x[2];
 
 /**
-	Synchronization between plain push and steal
+	Synchronization between plain push and steal (making w31 release and w35
+	acquire)
 */
 
 static void task(void * param) {
