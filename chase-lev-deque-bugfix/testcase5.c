@@ -13,7 +13,7 @@ int a;
 int b;
 int c;
 
-/** Making w14 release */
+/** Making w14 & w15 release */
 
 static void task1(void * param) {
 	b=steal(q);

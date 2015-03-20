@@ -4,6 +4,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+Deque * create_size(int size) {
+	Deque * q = (Deque *) calloc(1, sizeof(Deque));
+	Array * a = (Array *) calloc(1, sizeof(Array)+2*sizeof(atomic_int));
+	atomic_store_explicit(&q->array, a, memory_order_relaxed);
+	atomic_store_explicit(&q->top, 0, memory_order_relaxed);
+	atomic_store_explicit(&q->bottom, 0, memory_order_relaxed);
+	atomic_store_explicit(&a->size, size, memory_order_relaxed);
+	return q;
+}
+
 Deque * create() {
 	Deque * q = (Deque *) calloc(1, sizeof(Deque));
 	Array * a = (Array *) calloc(1, sizeof(Array)+2*sizeof(atomic_int));
@@ -19,21 +29,21 @@ int take(Deque *q) {
 	Array *a = (Array *) atomic_load_explicit(&q->array, memory_order_relaxed);
 	atomic_store_explicit(&q->bottom, b, memory_order_relaxed);
 	atomic_thread_fence(memory_order_seq_cst);
-	size_t t = atomic_load_explicit(&q->top, memory_order_relaxed);
+	size_t t = atomic_load_explicit(&q->top, memory_order_acquire); // relaxed
 	int x;
 	if (t <= b) {
 		/* Non-empty queue. */
 		x = atomic_load_explicit(&a->buffer[b % atomic_load_explicit(&a->size,memory_order_relaxed)], memory_order_relaxed);
 		if (t == b) {
 			/* Single last element in queue. */
-			if (!atomic_compare_exchange_strong_explicit(&q->top, &t, t + 1, memory_order_seq_cst, memory_order_relaxed))
+			if (!atomic_compare_exchange_strong_explicit(&q->top, &t, t + 1, memory_order_relaxed, memory_order_relaxed)) // seq_cst
 				/* Failed race. */
 				x = EMPTY;
-			atomic_store_explicit(&q->bottom, b + 1, memory_order_relaxed);
+			atomic_store_explicit(&q->bottom, b + 1, memory_order_release); // relaxed
 		}
 	} else { /* Empty queue. */
 		x = EMPTY;
-		atomic_store_explicit(&q->bottom, b + 1, memory_order_relaxed);
+		atomic_store_explicit(&q->bottom, b + 1, memory_order_release); // relaxed
 	}
 	return x;
 }
@@ -69,7 +79,7 @@ void push(Deque *q, int x) {
 }
 
 int steal(Deque *q) {
-	size_t t = atomic_load_explicit(&q->top, memory_order_acquire);
+	size_t t = atomic_load_explicit(&q->top, memory_order_relaxed); // acquire
 	atomic_thread_fence(memory_order_seq_cst);
 	size_t b = atomic_load_explicit(&q->bottom, memory_order_acquire);
 	int x = EMPTY;

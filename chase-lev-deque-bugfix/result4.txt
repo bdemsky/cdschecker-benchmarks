@@ -22,12 +22,12 @@ wildcard 21 -> memory_order_relaxed
 wildcard 22 -> memory_order_relaxed
 wildcard 23 -> memory_order_release
 wildcard 24 -> memory_order_relaxed
-wildcard 25 -> memory_order_relaxed
+wildcard 25 -> memory_order_acquire
 wildcard 26 -> memory_order_relaxed
 wildcard 27 -> memory_order_relaxed
 wildcard 28 -> memory_order_relaxed
 wildcard 29 -> memory_order_relaxed
-wildcard 30 -> memory_order_release
+wildcard 30 -> memory_order_relaxed
 wildcard 31 -> memory_order_release
 wildcard 32 -> memory_order_relaxed
 wildcard 33 -> memory_order_relaxed
@@ -35,7 +35,7 @@ wildcard 34 -> memory_order_seq_cst
 wildcard 35 -> memory_order_acquire
 wildcard 36 -> memory_order_acquire
 wildcard 37 -> memory_order_relaxed
-wildcard 38 -> memory_order_acquire
+wildcard 38 -> memory_order_relaxed
 wildcard 39 -> memory_order_seq_cst
 
 Result 1:
@@ -62,12 +62,12 @@ wildcard 21 -> memory_order_relaxed
 wildcard 22 -> memory_order_relaxed
 wildcard 23 -> memory_order_release
 wildcard 24 -> memory_order_relaxed
-wildcard 25 -> memory_order_acquire
+wildcard 25 -> memory_order_relaxed
 wildcard 26 -> memory_order_relaxed
 wildcard 27 -> memory_order_relaxed
 wildcard 28 -> memory_order_relaxed
 wildcard 29 -> memory_order_relaxed
-wildcard 30 -> memory_order_relaxed
+wildcard 30 -> memory_order_release
 wildcard 31 -> memory_order_release
 wildcard 32 -> memory_order_relaxed
 wildcard 33 -> memory_order_relaxed
@@ -75,7 +75,7 @@ wildcard 34 -> memory_order_seq_cst
 wildcard 35 -> memory_order_acquire
 wildcard 36 -> memory_order_acquire
 wildcard 37 -> memory_order_relaxed
-wildcard 38 -> memory_order_relaxed
+wildcard 38 -> memory_order_acquire
 wildcard 39 -> memory_order_seq_cst
 
 Result 2:
@@ -102,12 +102,12 @@ wildcard 21 -> memory_order_relaxed
 wildcard 22 -> memory_order_relaxed
 wildcard 23 -> memory_order_release
 wildcard 24 -> memory_order_relaxed
-wildcard 25 -> memory_order_relaxed
+wildcard 25 -> memory_order_acquire
 wildcard 26 -> memory_order_relaxed
 wildcard 27 -> memory_order_relaxed
 wildcard 28 -> memory_order_relaxed
 wildcard 29 -> memory_order_relaxed
-wildcard 30 -> memory_order_release
+wildcard 30 -> memory_order_relaxed
 wildcard 31 -> memory_order_release
 wildcard 32 -> memory_order_relaxed
 wildcard 33 -> memory_order_relaxed
@@ -115,7 +115,7 @@ wildcard 34 -> memory_order_seq_cst
 wildcard 35 -> memory_order_acquire
 wildcard 36 -> memory_order_acquire
 wildcard 37 -> memory_order_relaxed
-wildcard 38 -> memory_order_acquire
+wildcard 38 -> memory_order_relaxed
 wildcard 39 -> memory_order_seq_cst
 
 Result 3:
@@ -142,6 +142,46 @@ wildcard 21 -> memory_order_relaxed
 wildcard 22 -> memory_order_relaxed
 wildcard 23 -> memory_order_release
 wildcard 24 -> memory_order_relaxed
+wildcard 25 -> memory_order_relaxed
+wildcard 26 -> memory_order_relaxed
+wildcard 27 -> memory_order_relaxed
+wildcard 28 -> memory_order_relaxed
+wildcard 29 -> memory_order_relaxed
+wildcard 30 -> memory_order_release
+wildcard 31 -> memory_order_release
+wildcard 32 -> memory_order_relaxed
+wildcard 33 -> memory_order_relaxed
+wildcard 34 -> memory_order_seq_cst
+wildcard 35 -> memory_order_acquire
+wildcard 36 -> memory_order_acquire
+wildcard 37 -> memory_order_relaxed
+wildcard 38 -> memory_order_acquire
+wildcard 39 -> memory_order_seq_cst
+
+Result 4:
+wildcard 1 -> memory_order_relaxed
+wildcard 2 -> memory_order_relaxed
+wildcard 3 -> memory_order_relaxed
+wildcard 4 -> memory_order_relaxed
+wildcard 5 -> memory_order_relaxed
+wildcard 6 -> memory_order_relaxed
+wildcard 7 -> memory_order_relaxed
+wildcard 8 -> memory_order_seq_cst
+wildcard 9 -> memory_order_relaxed
+wildcard 10 -> memory_order_relaxed
+wildcard 11 -> memory_order_relaxed
+wildcard 12 -> memory_order_acquire
+wildcard 14 -> memory_order_relaxed
+wildcard 15 -> memory_order_relaxed
+wildcard 16 -> memory_order_relaxed
+wildcard 17 -> memory_order_relaxed
+wildcard 18 -> memory_order_relaxed
+wildcard 19 -> memory_order_relaxed
+wildcard 20 -> memory_order_relaxed
+wildcard 21 -> memory_order_relaxed
+wildcard 22 -> memory_order_relaxed
+wildcard 23 -> memory_order_release
+wildcard 24 -> memory_order_relaxed
 wildcard 25 -> memory_order_acquire
 wildcard 26 -> memory_order_relaxed
 wildcard 27 -> memory_order_relaxed
@@ -158,7 +198,7 @@ wildcard 37 -> memory_order_relaxed
 wildcard 38 -> memory_order_relaxed
 wildcard 39 -> memory_order_seq_cst
 
-Result 4:
+Result 5:
 wildcard 1 -> memory_order_relaxed
 wildcard 2 -> memory_order_relaxed
 wildcard 3 -> memory_order_relaxed
@@ -196,44 +236,4 @@ wildcard 35 -> memory_order_acquire
 wildcard 36 -> memory_order_acquire
 wildcard 37 -> memory_order_relaxed
 wildcard 38 -> memory_order_acquire
-wildcard 39 -> memory_order_seq_cst
-
-Result 5:
-wildcard 1 -> memory_order_relaxed
-wildcard 2 -> memory_order_relaxed
-wildcard 3 -> memory_order_relaxed
-wildcard 4 -> memory_order_relaxed
-wildcard 5 -> memory_order_relaxed
-wildcard 6 -> memory_order_relaxed
-wildcard 7 -> memory_order_relaxed
-wildcard 8 -> memory_order_seq_cst
-wildcard 9 -> memory_order_relaxed
-wildcard 10 -> memory_order_relaxed
-wildcard 11 -> memory_order_relaxed
-wildcard 12 -> memory_order_acquire
-wildcard 14 -> memory_order_relaxed
-wildcard 15 -> memory_order_relaxed
-wildcard 16 -> memory_order_relaxed
-wildcard 17 -> memory_order_relaxed
-wildcard 18 -> memory_order_relaxed
-wildcard 19 -> memory_order_relaxed
-wildcard 20 -> memory_order_relaxed
-wildcard 21 -> memory_order_relaxed
-wildcard 22 -> memory_order_relaxed
-wildcard 23 -> memory_order_release
-wildcard 24 -> memory_order_relaxed
-wildcard 25 -> memory_order_acquire
-wildcard 26 -> memory_order_relaxed
-wildcard 27 -> memory_order_relaxed
-wildcard 28 -> memory_order_relaxed
-wildcard 29 -> memory_order_relaxed
-wildcard 30 -> memory_order_relaxed
-wildcard 31 -> memory_order_release
-wildcard 32 -> memory_order_relaxed
-wildcard 33 -> memory_order_relaxed
-wildcard 34 -> memory_order_seq_cst
-wildcard 35 -> memory_order_acquire
-wildcard 36 -> memory_order_acquire
-wildcard 37 -> memory_order_relaxed
-wildcard 38 -> memory_order_relaxed
 wildcard 39 -> memory_order_seq_cst
