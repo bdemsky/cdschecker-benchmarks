@@ -38,6 +38,7 @@ public:
 			if (data)
 				break;
 			ec.wait(cmp);
+			thrd_yield();
 			data = try_dequeue();
 			if (data)
 				break;
