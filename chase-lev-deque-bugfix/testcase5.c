@@ -13,14 +13,12 @@ int a;
 int b;
 int c;
 
-/** Making w14 & w15 release */
+/** Make w14 release, try to run with the following:
+	time ./run.sh chase-lev-deque-bugfix/testcase5_wildcard -m2 -y -u3 -tSCFENCE
+		-o fchase-lev-deque-bugfix/result4.txt -o weaken -x5000
+*/
 
-static void task1(void * param) {
-	b=steal(q);
-	//c=steal(q);
-}
-
-static void task2(void * param) {
+static void task(void * param) {
 	b=steal(q);
 	//c=steal(q);
 }
@@ -31,15 +29,14 @@ int user_main(int argc, char **argv)
 	q=create();
 
 	push(q, 1);
-	thrd_create(&t1, task1, 0);
-	thrd_create(&t2, task2, 0);
-	a=take(q);
-	push(q, 2);
-	c=take(q);
 	//push(q, 2);
 	//push(q, 3);
+	thrd_create(&t1, task, 0);
+	//thrd_create(&t2, task, 0);
+	a=take(q);
+	//c=take(q);
 	thrd_join(t1);
-	thrd_join(t2);
+	//thrd_join(t2);
 
 /*
 	bool correct=true;

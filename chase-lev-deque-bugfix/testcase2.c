@@ -14,7 +14,7 @@ int b;
 int c;
 
 /**
-	Making w39 seq_cst; the two steals and the take have the following:
+	Making the two fences (w8 & w34) seq_cst; the two steals and the take have the following:
 	t.CAS() (in steal1)          b.store (in take)
 	fence() (in steal2)	         fence() (in take)
 	b.load() (in steal2)         t.load() (in take)

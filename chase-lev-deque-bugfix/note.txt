@@ -60,3 +60,15 @@ fences.
 ##################################################
 testcase5.c is a testcase that has 2 threads, 1 of which has 1 steal() and the
 other has 3 push() followed by 2 take().
+
+
+By running our testcases from 1-6, it took:
+0m0.013s (testcase1)
+0m0.028s (testcase2)
+0m6.264s (testcase3)
+0m0.824s (testcase4)
+0m0.054s (testcase5)
+9m19.887s (testcase6)
+
+In total: 9m27.02s
+

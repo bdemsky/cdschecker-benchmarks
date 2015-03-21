@@ -1,3 +1,12 @@
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv/benchmarks$ time
+./run.sh chase-lev-deque-bugfix/testcase3_wildcard -m2 -y -u3 -tSCFENCE -o
+fchase-lev-deque-bugfix/result2.txt -o weaken &> /scratch/a
+
+real	0m6.858s
+user	0m6.264s
+sys	0m0.577s
+
+
 Result 0:
 wildcard 1 -> memory_order_relaxed
 wildcard 2 -> memory_order_relaxed

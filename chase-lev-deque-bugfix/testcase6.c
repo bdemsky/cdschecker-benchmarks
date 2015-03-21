@@ -13,25 +13,33 @@ int a;
 int b;
 int c;
 
-static void task(void * param) {
-	a=steal(q);
-	printf("steal a=%d\n", a);
+/** Making w15 release */
+
+static void task1(void * param) {
+	b=steal(q);
+	//c=steal(q);
+}
+
+static void task2(void * param) {
+	b=steal(q);
+	//c=steal(q);
 }
 
 int user_main(int argc, char **argv)
 {
 	thrd_t t1, t2;
 	q=create();
+
 	push(q, 1);
-	thrd_create(&t1, task, 0);
-	//thrd_create(&t2, task, 0);
+	thrd_create(&t1, task1, 0);
+	thrd_create(&t2, task2, 0);
+	a=take(q);
+	push(q, 2);
+	c=take(q);
 	//push(q, 2);
-	//push(q, 4);
-	b=take(q);
-	printf("take b=%d\n", b);
-	//c=take(q);
+	//push(q, 3);
 	thrd_join(t1);
-	//thrd_join(t2);
+	thrd_join(t2);
 
 /*
 	bool correct=true;

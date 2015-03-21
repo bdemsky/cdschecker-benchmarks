@@ -1,3 +1,12 @@
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv/benchmarks$ time
+./run.sh chase-lev-deque-bugfix/testcase4_wildcard -m2 -y -u3 -tSCFENCE -o
+fchase-lev-deque-bugfix/result3.txt -o weaken &> /scratch/a
+
+real	0m0.918s
+user	0m0.824s
+sys	0m0.080s
+
+
 Result 0:
 wildcard 1 -> memory_order_relaxed
 wildcard 2 -> memory_order_relaxed
@@ -5,7 +14,7 @@ wildcard 3 -> memory_order_relaxed
 wildcard 4 -> memory_order_relaxed
 wildcard 5 -> memory_order_relaxed
 wildcard 6 -> memory_order_relaxed
-wildcard 7 -> memory_order_relaxed
+wildcard 7 -> memory_order_release
 wildcard 8 -> memory_order_seq_cst
 wildcard 9 -> memory_order_relaxed
 wildcard 10 -> memory_order_relaxed
@@ -45,7 +54,7 @@ wildcard 3 -> memory_order_relaxed
 wildcard 4 -> memory_order_relaxed
 wildcard 5 -> memory_order_relaxed
 wildcard 6 -> memory_order_relaxed
-wildcard 7 -> memory_order_relaxed
+wildcard 7 -> memory_order_release
 wildcard 8 -> memory_order_seq_cst
 wildcard 9 -> memory_order_relaxed
 wildcard 10 -> memory_order_relaxed
@@ -165,7 +174,7 @@ wildcard 3 -> memory_order_relaxed
 wildcard 4 -> memory_order_relaxed
 wildcard 5 -> memory_order_relaxed
 wildcard 6 -> memory_order_relaxed
-wildcard 7 -> memory_order_relaxed
+wildcard 7 -> memory_order_release
 wildcard 8 -> memory_order_seq_cst
 wildcard 9 -> memory_order_relaxed
 wildcard 10 -> memory_order_relaxed
@@ -205,7 +214,7 @@ wildcard 3 -> memory_order_relaxed
 wildcard 4 -> memory_order_relaxed
 wildcard 5 -> memory_order_relaxed
 wildcard 6 -> memory_order_relaxed
-wildcard 7 -> memory_order_relaxed
+wildcard 7 -> memory_order_release
 wildcard 8 -> memory_order_seq_cst
 wildcard 9 -> memory_order_relaxed
 wildcard 10 -> memory_order_relaxed
