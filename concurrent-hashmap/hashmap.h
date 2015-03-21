@@ -5,17 +5,10 @@
 #include <atomic>
 #include "stdio.h" 
 //#include <common.h>
-#ifdef STANDALONE
-#include <assert.h>
-#define MODEL_ASSERT assert 
-#else
-#include <model-assert.h>
-#endif
 #include <stdlib.h>
 #include <mutex>
 
-#include "common.h"
-#include "sc_annotation.h"
+//#include "sc_annotation.h"
 
 #define relaxed memory_order_relaxed
 #define release memory_order_release
@@ -149,7 +142,7 @@ class HashMap {
 	}
 
 	Value* get(Key *key) {
-		MODEL_ASSERT (key);
+		//MODEL_ASSERT (key);
 		int hash = hashKey(key);
 
 		// Try first without locking...
@@ -165,9 +158,9 @@ class HashMap {
 		// lock, we ignore this operation for the SC analysis, and otherwise we
 		// take it into consideration
 		
-		SC_BEGIN();
+		//SC_BEGIN();
 		Entry *firstPtr = first->load(acquire);
-		SC_END();
+		//SC_END();
 
 		e = firstPtr;
 		while (e != NULL) {
@@ -209,7 +202,7 @@ class HashMap {
 
 	Value* put(Key *key, Value *value) {
 		// Don't allow NULL key or value
-		MODEL_ASSERT (key && value);
+		//MODEL_ASSERT (key && value);
 
 		int hash = hashKey(key);
 		Segment *seg = segments[hash & SEGMENT_MASK];
@@ -248,7 +241,7 @@ class HashMap {
 	}
 
 	Value* remove(Key *key, Value *value) {
-		MODEL_ASSERT (key);
+		//MODEL_ASSERT (key);
 		int hash = hashKey(key);
 		Segment *seg = segments[hash & SEGMENT_MASK];
 		atomic<Entry*> *tab;
