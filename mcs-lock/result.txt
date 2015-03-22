@@ -1,0 +1,29 @@
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ time ./run.sh
+benchmarks/mcs-lock/testcase1 -m2 -y -u3 -b100 -tSCFENCE -o weaken -o m &>
+/scratch/a
+
+real	0m12.838s
+user	0m11.925s
+sys	0m0.834s
+
+Result 0:
+wildcard 1 -> memory_order_relaxed
+wildcard 2 -> memory_order_relaxed
+wildcard 3 -> memory_order_acq_rel
+wildcard 4 -> memory_order_release
+wildcard 5 -> memory_order_acquire
+wildcard 6 -> memory_order_acquire
+wildcard 7 -> memory_order_acq_rel
+wildcard 8 -> memory_order_relaxed
+wildcard 9 -> memory_order_release
+
+Result 1:
+wildcard 1 -> memory_order_relaxed
+wildcard 2 -> memory_order_relaxed
+wildcard 3 -> memory_order_acq_rel
+wildcard 4 -> memory_order_release
+wildcard 5 -> memory_order_acquire
+wildcard 6 -> memory_order_acquire
+wildcard 7 -> memory_order_release
+wildcard 8 -> memory_order_acquire
+wildcard 9 -> memory_order_release

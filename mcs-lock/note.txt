@@ -23,3 +23,5 @@ peizhaoo@dw-2:~/model-checker$ ./run.sh mcs-lock/testcase1 -m2 -b100 -y -tSCFENC
 The '-b100' is to terminate the execution in case of infinite loops because of
 improper synchronization at the beginning period. The 'm' option for SCFENCE
 analysis is to turn on the implyMO mode.
+
+It took to    finish!!
