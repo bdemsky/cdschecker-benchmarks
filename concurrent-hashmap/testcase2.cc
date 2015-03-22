@@ -25,41 +25,45 @@ void printValue(Value *value) {
 // Key(3, 2, 6) & Key(1, 3, 3) are hashed to the same slot -> 4
 // Key(1, 1, 1) & Key(3, 2, 2) are hashed to the same slot -> 0
 // Key(2, 4, 1) & Key(3, 4, 2) are hashed to the same slot -> 3
-// Key(3, 4, 5) & Key(1, 4, 3) are hashed to the same slot -> 5
-
+// Key(3, 4, 5) & Key(1, 4, 3) & Key(1, 1, 6) are hashed to the same slot -> 5
+// Key(2, 4, 8) & Key(1, 3, 8) -> 9
+// Key(1, 4, 8) -> 10
+// Key(1, 3, 7) -> 8
+// Key(1, 2, 7) -> 7
+// Key(1, 2, 6) -> 6
 
 void threadA(void *arg) {
 	Key *k1 = new Key(3, 2, 6);
-	Key *k2 = new Key(1, 1, 1);
-	Value *v1 = new Value(10, 10, 10);
-	Value *r1 = table->put(k1, v1);
+	Key *k2 = new Key(1, 3, 3);
+	Key *k3 = new Key(2, 4, 1);
+	Key *k4 = new Key(3, 4, 2);
+	Value *v2 = new Value(10, 10, 10);
+	Value *r1 = table->put(k2, v2);
 	//printValue(r1);
-	Value *r2 = table->get(k2);
-	//printf("Thrd A:\n");
-	printValue(r2);
+	Value *r2 = table->get(k4);
+	//printValue(r2);
 }
 
 void threadB(void *arg) {
 	Key *k1 = new Key(3, 2, 6);
-	Key *k2 = new Key(1, 1, 1);
-	Value *v2 = new Value(30, 40, 50);
-	Value *r3 = table->put(k2, v2);
-	//printValue(r3);
-	Value *r4 = table->get(k1);
-	printf("Thrd B:\n");
-	printValue(r4);
+	Key *k2 = new Key(1, 3, 3);
+	Key *k3 = new Key(2, 4, 1);
+	Key *k4 = new Key(3, 4, 2);
+	Value *v3 = new Value(30, 40, 50);
+	Value *r3 = table->put(k3, v3);
 }
 
 int user_main(int argc, char *argv[]) {
-	
 	Key *k1 = new Key(3, 2, 6);
-	Key *k2 = new Key(1, 1, 1);
+	Key *k2 = new Key(1, 3, 3);
+	Key *k3 = new Key(2, 4, 1);
+	Key *k4 = new Key(3, 4, 2);
 	Value *v1 = new Value(111, 111, 111);
 	Value *v2 = new Value(222, 222, 222);
 	thrd_t t1, t2;
 	table = new HashMap;
 	table->put(k1, v1);
-	table->put(k2, v2);
+	//table->put(k3, v2);
 
 	thrd_create(&t1, threadA, NULL);
 	thrd_create(&t2, threadB, NULL);

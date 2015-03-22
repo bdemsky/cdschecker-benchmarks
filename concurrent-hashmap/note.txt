@@ -8,3 +8,10 @@ get(k2); // b				get(k1); // d
 When b and d both read the old head of the list (and they later grab the lock,
 making it the interface SC), it's non-SC because neither reads the updated
 value.
+
+Run testcase1 to make the store and load of value slot to be seq_cst.
+
+Then run testcase2 with "-o annotation" to get store and load of key slot to be
+release/acquire.
+
+0m0.015s + 0m0.000 = 0m0.015s 

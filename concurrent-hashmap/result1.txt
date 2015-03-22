@@ -1,9 +1,17 @@
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ time ./run.sh
+benchmarks/concurrent-hashmap/testcase1_wildcard -m2 -y -u3 -tSCFENCE -o weaken
+&> /scratch/a
+
+real	0m0.031s
+user	0m0.015s
+sys	0m0.000s
+
 Result 0:
 wildcard 1 -> memory_order_relaxed
 wildcard 2 -> memory_order_relaxed
-wildcard 3 -> memory_order_acquire
-wildcard 4 -> memory_order_relaxed
-wildcard 6 -> memory_order_relaxed
-wildcard 7 -> memory_order_relaxed
+wildcard 3 -> memory_order_relaxed
+wildcard 4 -> memory_order_seq_cst
 wildcard 9 -> memory_order_relaxed
-wildcard 13 -> memory_order_release
+wildcard 10 -> memory_order_relaxed
+wildcard 11 -> memory_order_seq_cst
+wildcard 13 -> memory_order_relaxed

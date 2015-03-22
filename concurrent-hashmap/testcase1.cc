@@ -28,6 +28,8 @@ void printValue(Value *value) {
 // Key(3, 4, 5) & Key(1, 4, 3) are hashed to the same slot -> 5
 
 
+/** Making w4 & w11 seq_cst */
+
 void threadA(void *arg) {
 	Key *k1 = new Key(3, 2, 6);
 	Key *k2 = new Key(1, 1, 1);
@@ -51,8 +53,15 @@ void threadB(void *arg) {
 }
 
 int user_main(int argc, char *argv[]) {
+	
+	Key *k1 = new Key(3, 2, 6);
+	Key *k2 = new Key(1, 1, 1);
+	Value *v1 = new Value(111, 111, 111);
+	Value *v2 = new Value(222, 222, 222);
 	thrd_t t1, t2;
 	table = new HashMap;
+	table->put(k1, v1);
+	table->put(k2, v2);
 
 	thrd_create(&t1, threadA, NULL);
 	thrd_create(&t2, threadB, NULL);
