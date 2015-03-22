@@ -1,0 +1,16 @@
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv/benchmarks$ time
+./run.sh spsc-queue-scfence/spsc-queue -m2 -y -u3 -tSCFENCE -o weaken  &>
+/scratch/a
+
+real	0m0.050s
+user	0m0.004s
+sys	0m0.026s
+
+Result 0:
+wildcard 1 -> memory_order_seq_cst
+wildcard 2 -> memory_order_seq_cst
+wildcard 3 -> memory_order_relaxed
+wildcard 4 -> memory_order_relaxed
+wildcard 5 -> memory_order_relaxed
+wildcard 6 -> memory_order_seq_cst
+wildcard 7 -> memory_order_seq_cst
