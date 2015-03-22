@@ -4,3 +4,9 @@ result2.txt. We can't infer the wildcard(4) to be acquire because we can't reach
 "that case"!!! 
 See
 http://stackoverflow.com/questions/3873689/lock-free-queue-algorithm-repeated-reads-for-consistency
+
+
+result1.txt -> 0m14.826s
+result2.txt -> 0m1.289s
+
+total -> 0m 16.115

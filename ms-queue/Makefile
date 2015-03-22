@@ -23,4 +23,4 @@ $(NORMAL_TESTS): % : %.c $(BENCH).o
 	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 clean:
-	rm -f *.o *.d $(TESTS)
+	rm -f *.o *.d $(TESTS) main
