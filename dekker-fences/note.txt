@@ -3,6 +3,12 @@ dekker-fences-wildcard2 to get get result2.txt. In result2.txt, those results
 that do not impose ordering to fences should be dropped, so we got the correct
 result.
 
-./run.sh benchmarks/dekker-fences/dekker-fences-wildcard1 -m2 -y -x500 -tSCFENCE &> result1.txt
+time ./run.sh benchmarks/dekker-fences/dekker-fences-wildcard1 -m2 -y -u3 -tSCFENCE -o weaken &> /scratch/a
 
-./run.sh benchmarks/dekker-fences/dekker-fences-wildcard2 -m2 -y -x150 -tSCFENCE -o fresult1.txt
+We got result1.txt, and it took 1m20.790s.
+
+time ./run.sh benchmarks/dekker-fences/dekker-fences-wildcard2 -m2 -y -u3 -tSCFENCE -o weaken -o fbenchmarks/dekker-fences/result1.txt -x10000 &> /scratch/a
+
+We got result2.txt, and it took 5m19.538s
+
+In total, it took 6m40.328s.
