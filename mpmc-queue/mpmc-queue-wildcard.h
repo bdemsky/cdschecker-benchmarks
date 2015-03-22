@@ -34,14 +34,14 @@ public:
 	//-----------------------------------------------------
 
 	t_element * read_fetch() {
-		unsigned int rdwr = m_rdwr.load(wildcard(1)); // acquire
+		unsigned int rdwr = m_rdwr.load(wildcard(1)); // acquire, but can be relaxed
 		unsigned int rd,wr;
 		for(;;) {
 			rd = (rdwr>>16) & 0xFFFF;
 			wr = rdwr & 0xFFFF;
 
 			if ( wr == rd ) { // empty
-				return false;
+				return NULL;
 			}
 
 			// acq_rel
@@ -84,7 +84,7 @@ public:
 	//-----------------------------------------------------
 
 	t_element * write_prepare() {
-		unsigned int rdwr = m_rdwr.load(wildcard(5)); // acquire
+		unsigned int rdwr = m_rdwr.load(wildcard(5)); // acquire, but can be relaxed
 		unsigned int rd,wr;
 		for(;;) {
 			rd = (rdwr>>16) & 0xFFFF;

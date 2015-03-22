@@ -18,3 +18,16 @@ m_written.load; // a		m_rdwr.load; // The first in the read_fetch() // b
 
 a & b can both read old value and it's non-SC. However, the later loads and CAS
 in the loops will finally fix this problem.
+
+
+
+Run testcase1 with -Y, we got w3 & w7 to be acquire, and w4 & w8 release. Then
+if we run testcase1 with -Y on its "-y" result, we will make other parameters
+seq_cst.
+
+However, we might have a bug in the model-checker when we ran with -y,
+explanation as follows:
+
+After we strengthen w1 & w6 to be sc, w1 can still read a value from a store
+that is modification ordered before w6 (w6 is SC before w1). We should deal with
+this after the OOPSLA deadline.

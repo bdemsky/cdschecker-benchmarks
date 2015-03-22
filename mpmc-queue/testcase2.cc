@@ -8,10 +8,13 @@
 
 #include "mpmc-queue-wildcard.h"
 
+atomic_int x;
+
 void threadA(struct mpmc_boundq_1_alt<int32_t, sizeof(int32_t)> *queue)
 {
 	int32_t *bin = queue->write_prepare();
-	store_32(bin, 1);
+	//store_32(bin, 1);
+	x.store(1, memory_order_relaxed);
 	queue->write_publish();
 }
 
@@ -19,7 +22,8 @@ void threadB(struct mpmc_boundq_1_alt<int32_t, sizeof(int32_t)> *queue)
 {
 	int32_t *bin;
 	while ((bin = queue->read_fetch()) != NULL) {
-		printf("Read: %d\n", load_32(bin));
+		x.load(memory_order_relaxed);
+		//printf("Read: %d\n", load_32(bin));
 		queue->read_consume();
 	}
 }
@@ -27,15 +31,17 @@ void threadB(struct mpmc_boundq_1_alt<int32_t, sizeof(int32_t)> *queue)
 void threadC(struct mpmc_boundq_1_alt<int32_t, sizeof(int32_t)> *queue)
 {
 	int32_t *bin = queue->write_prepare();
-	store_32(bin, 1);
+	//store_32(bin, 1);
+	x.store(1, memory_order_relaxed);
+
 	queue->write_publish();
 
 	while ((bin = queue->read_fetch()) != NULL) {
-		printf("Read: %d\n", load_32(bin));
+		x.load(memory_order_relaxed);
+		//printf("Read: %d\n", load_32(bin));
 		queue->read_consume();
 	}
-}
-
+} 
 #define MAXREADERS 3
 #define MAXWRITERS 3
 #define MAXRDWR 3
@@ -110,6 +116,8 @@ int user_main(int argc, char **argv)
 	//process_params(argc, argv);
 	printf("%d reader(s), %d writer(s)\n", readers, writers);
 
+
+	x.store(0);
 #ifndef CONFIG_MPMC_NO_INITIAL_ELEMENT
 	printf("Adding initial element\n");
 	int32_t *bin = queue.write_prepare();
