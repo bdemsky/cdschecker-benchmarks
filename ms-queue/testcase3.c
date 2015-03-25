@@ -28,33 +28,30 @@ int idx1, idx2;
 unsigned int reclaimNode1, reclaimNode2;
 
 static int procs = 2;
+
+
+/** This testcase can infer w2->release & w4->acquire.
+	The initial node that Head and Tail points to is 1, so when T3 enqueue with
+	node 2, and dequeue(get node 1), and enqueue node 1 again, the second time
+	it enqueues node 1 it actually first initialize node1->next. At the same
+	time in T2, it reads that node1->next (because it reads the old Tail at the
+	very beginning), then loads the Tail agian (w4), it can actully reads an old
+	value. And this is a bug because if node 1 is again dequeued, then for T2 to
+	update node1->next, it can potentially contaminate the memory...
+*/
+
 static void main_task(void *param)
 {
 	unsigned int val;
 	int pid = *((int *)param);
 	if (pid % 4 == 0) {
-		//atomic_store_explicit(&x[0], 1, memory_order_relaxed);
-		enqueue(queue, 0, true);
-	
-	
+		enqueue(queue, 0, 3);
 	} else if (pid % 4 == 1) {
-		//atomic_store_explicit(&x[1], 1, memory_order_relaxed);
-		enqueue(queue, 1, false);
-		enqueue(queue, 1, false);
-
+		enqueue(queue, 1, 2);
 		succ1 = dequeue(queue, &idx1, &reclaimNode1);
-		if (succ1) {
-			//atomic_load_explicit(&x[idx1], memory_order_relaxed);
-		}
-
-		succ2 = dequeue(queue, &idx2, &reclaimNode2);
-		if (succ2) {
-			//atomic_load_explicit(&x[idx2], memory_order_relaxed);
-		}
-		simulateRecycledNodeUpdate(queue, reclaimNode1);
-		
-
-
+		enqueue(queue, 1, 1);
+		//succ1 = dequeue(queue, &idx1, &reclaimNode1);
+		//enqueue(queue, 1, false, 2);
 	} else if (pid % 4 == 2) {
 
 	} else if (pid % 4 == 3) {

@@ -39,7 +39,7 @@ static void main_task(void *param)
 		*/
 	} else if (pid % 4 == 1) {
 		atomic_store_explicit(&x[1], 1, memory_order_relaxed);
-		enqueue(queue, 1, false);
+		enqueue(queue, 1, 0);
 	} else if (pid % 4 == 2) {
 		succ1 = dequeue(queue, &idx1, &reclaimNode);
 		if (succ1) {

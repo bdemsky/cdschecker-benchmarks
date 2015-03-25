@@ -83,7 +83,7 @@ void init_queue(queue_t *q, int num_threads)
 	atomic_init(&q->nodes[1].next, MAKE_POINTER(0, 0));
 }
 
-void enqueue(queue_t *q, unsigned int val, bool yield)
+void enqueue(queue_t *q, unsigned int val, int n)
 {
 	int success = 0;
 	unsigned int node;
@@ -91,18 +91,20 @@ void enqueue(queue_t *q, unsigned int val, bool yield)
 	pointer next;
 	pointer tmp;
 
-	node = new_node();
+	//node = new_node();
+	if (n == 0) // Don't want to control the malloc process
+		node = new_node();
+	else
+		node = n;
 	//store_32(&q->nodes[node].value, val);
 	q->nodes[node].value = val;
 	tmp = atomic_load_explicit(&q->nodes[node].next, wildcard(1)); // relaxed
 	set_ptr(&tmp, 0); // NULL
+	// FIXME: SCFence makes this release, and this is actually a bug!!! 
 	atomic_store_explicit(&q->nodes[node].next, tmp, wildcard(2)); // relaxed
 
 	while (!success) {
 		tail = atomic_load_explicit(&q->tail, wildcard(3)); // acquire
-		// FIXME: SCFence makes this relaxed
-		if (yield)
-			thrd_yield();
 		next = atomic_load_explicit(&q->nodes[get_ptr(tail)].next, wildcard(4)); //acquire
 		if (tail == atomic_load_explicit(&q->tail, wildcard(5))) { // relaxed
 

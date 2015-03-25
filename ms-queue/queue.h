@@ -26,9 +26,7 @@ typedef struct {
 } queue_t;
 
 void init_queue(queue_t *q, int num_threads);
-void enqueue(queue_t *q, unsigned int val, bool yield);
+void enqueue(queue_t *q, unsigned int val, int n);
 bool dequeue(queue_t *q, unsigned int *retVal, unsigned int *reclaimedNode);
-
-void simulateRecycledNodeUpdate(queue_t *q, unsigned int node);
 
 int get_thread_num();

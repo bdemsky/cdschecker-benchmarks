@@ -83,7 +83,7 @@ void init_queue(queue_t *q, int num_threads)
 	atomic_init(&q->nodes[1].next, MAKE_POINTER(0, 0));
 }
 
-void enqueue(queue_t *q, unsigned int val, bool yield)
+void enqueue(queue_t *q, unsigned int val, int n)
 {
 	int success = 0;
 	unsigned int node;
