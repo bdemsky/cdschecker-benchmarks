@@ -1,55 +1,55 @@
 #include <threads.h>
 #include <atomic>
 
-#include "wildcard.h" 
-
+//#include "wildcard.h" 
 using namespace std;
 
-struct node {
-	node(int d) {
-		data.store(d, memory_order_normal);
-		next.store(0, wildcard(1));
-	}
-	atomic<node*> next;
-	atomic_int data;
-};
+#define acquire memory_order_acquire
+#define release memory_order_release
+#define relaxed memory_order_relaxed
 
-class spsc_queue { 
-	atomic<node*> head, tail;/*@ \label{line:spscBegin} @*/
+struct node {
+	node(int idx) {
+		index.store(idx, relaxed);
+		next.store(NULL, relaxed);
+	}
+	atomic<node*> next;/*@ \label{line:spscNodeNext} @*/
+	atomic<int> index;/*@ \label{line:spscNodeIndex} @*/
+};/*@ \label{line:spscNodeEnd} @*/
+
+class spsc_queue {/*@ \label{line:spscBegin} @*/
+	node *head, *tail;
 	public:
 	spsc_queue() {
 		head = tail = new node(-1);
 	}
-	void enqueue(int val) {
-		node* n = new node(val);
-		node *h = head.load(wildcard(2)); 
-		h->next.store(n, wildcard(3));/*@ \label{line:spscRelease} @*/
-		head.store(n, wildcard(4));
+	void enqueue(int idx) {
+		node* n = new node(idx);
+		tail->next.store(n, relaxed); // Should be release/*@ \label{line:spscRelease} @*/
+		tail = n;
 	}
-	bool dequeue(int *v) {
-		node* t = tail.load(wildcard(5));
-		node* n = t->next.load(wildcard(6));/*@ \label{line:spscAcquire} @*/
-		if (0 == n)
-			return false;
-		*v = n->data.load(memory_order_normal);
-		tail.store(n, wildcard(7));
-		delete (t);
+	bool dequeue(int *idx) {
+		node *tmp = head;
+		node *n = tmp->next.load(relaxed); // Should be acquire/*@ \label{line:spscAcquire} @*/
+		if (NULL == n) return false;
+		head = n;
+		*idx = n->index.load(relaxed);
+		delete (tmp);
 		return true;
 	}
-};
-
+};/*@ \label{line:spscEnd} @*/
 
 spsc_queue *q;/*@ \label{line:testcaseBegin} @*/
 atomic_int arr[2];
 void thrd1() { // Thread 1/*@ \label{line:thrd1} @*/
-	arr[1].store(47, relaxed);
+	arr[1].store(47, relaxed);/*@ \label{line:spscRelaxedStore} @*/
 	q->enqueue(1);
 }
 void thrd2() { // Thread 2/*@ \label{line:thrd2} @*/
 	int idx;
 	if (q->dequeue(&idx))
-		arr[idx].load(relaxed);
-}
+		arr[idx].load(relaxed);/*@ \label{line:spscRelaxedLoad} @*/
+}/*@ \label{line:testcaseEnd} @*/
 
 int user_main(int argc, char **argv)
 {
