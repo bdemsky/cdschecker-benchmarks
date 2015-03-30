@@ -1,3 +1,10 @@
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ time ./run.sh
+benchmarks/linuxrwlocks/testcase1 -m2 -y -u3 -tSCFENCE -o weaken &> /scratch/a
+
+real	1m58.120s
+user	1m56.110s
+sys	0m1.909s
+
 Result 0:
 wildcard 3 -> memory_order_acquire
 wildcard 4 -> memory_order_relaxed
@@ -7,7 +14,21 @@ wildcard 7 -> memory_order_acquire
 wildcard 8 -> memory_order_relaxed
 wildcard 9 -> memory_order_relaxed
 wildcard 10 -> memory_order_acquire
-wildcard 13 -> memory_order_relaxed
+wildcard 13 -> memory_order_acquire
+wildcard 14 -> memory_order_relaxed
+wildcard 15 -> memory_order_release
+wildcard 16 -> memory_order_release
+
+Result 1:
+wildcard 3 -> memory_order_acquire
+wildcard 4 -> memory_order_relaxed
+wildcard 5 -> memory_order_relaxed
+wildcard 6 -> memory_order_acquire
+wildcard 7 -> memory_order_acquire
+wildcard 8 -> memory_order_relaxed
+wildcard 9 -> memory_order_acquire
+wildcard 10 -> memory_order_acquire
+wildcard 13 -> memory_order_acquire
 wildcard 14 -> memory_order_relaxed
 wildcard 15 -> memory_order_release
 wildcard 16 -> memory_order_release

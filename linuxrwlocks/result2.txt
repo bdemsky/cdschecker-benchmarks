@@ -1,3 +1,11 @@
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ time ./run.sh
+benchmarks/linuxrwlocks/testcase2 -m2 -y -u3 -tSCFENCE -o weaken -o
+fbenchmarks/linuxrwlocks/result1.txt &> /scratch/a
+
+real	0m0.291s
+user	0m0.207s
+sys	0m0.006s
+
 Result 0:
 wildcard 1 -> memory_order_relaxed
 wildcard 2 -> memory_order_relaxed

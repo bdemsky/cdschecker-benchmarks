@@ -6,3 +6,8 @@ cases (plus corner cases) and then run each of them one after another.
 
 We ran testcase1 and then got inference result1.txt, then we ran testcase2 based
 on result1.txt, and we got result2.txt, which is the correct inference.
+
+result1.txt -> 1m56.110s
+result2.txt -> 0m0.207s
+
+total -> 1m56.317s

@@ -1,0 +1,24 @@
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ time ./run.sh
+benchmarks/seqlock/testcase1 -m2 -y -u3 -tSCFENCE -o weaken &> /scratch/a
+
+real	0m0.390s
+user	0m0.363s
+sys	0m0.018s
+
+Result 0:
+wildcard 1 -> memory_order_acquire
+wildcard 2 -> memory_order_acquire
+wildcard 3 -> memory_order_relaxed
+wildcard 4 -> memory_order_acquire
+wildcard 5 -> memory_order_relaxed
+wildcard 7 -> memory_order_release
+wildcard 8 -> memory_order_release
+
+Result 1:
+wildcard 1 -> memory_order_acquire
+wildcard 2 -> memory_order_acquire
+wildcard 3 -> memory_order_relaxed
+wildcard 4 -> memory_order_relaxed
+wildcard 5 -> memory_order_acquire
+wildcard 7 -> memory_order_release
+wildcard 8 -> memory_order_release
