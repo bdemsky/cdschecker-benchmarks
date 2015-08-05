@@ -1,6 +1,5 @@
-peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ time ./run.sh
-benchmarks/dekker-fences/dekker-fences-wildcard2 -m2 -y -u3 -tSCFENCE -o weaken
--o fbenchmarks/dekker-fences/result1.txt -x10000 &> /scratch/a
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$
+time ./run.sh benchmarks/dekker-fences/dekker-fences-wildcard2 -m2 -y -u3 -tSCFENCE -o file-benchmarks/dekker-fences/result1.txt -x10000 &> /scratch/a
 
 real	5m43.236s
 user	5m19.538s

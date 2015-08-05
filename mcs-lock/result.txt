@@ -1,6 +1,5 @@
-peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ time ./run.sh
-benchmarks/mcs-lock/testcase1 -m2 -y -u3 -b100 -tSCFENCE -o weaken -o m &>
-/scratch/a
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$
+time ./run.sh benchmarks/mcs-lock/testcase1 -m2 -y -u3 -b100 -tSCFENCE -o implicit-mo &> /scratch/a
 
 real	0m12.838s
 user	0m11.925s

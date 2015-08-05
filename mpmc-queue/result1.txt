@@ -1,6 +1,5 @@
-peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ time ./run.sh
-benchmarks/mpmc-queue/testcase1 -m2 -Y -u3 -tSCFENCE -o weaken -o
-fbenchmarks/mpmc-queue/result1.txt   &> /scratch/a
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$
+time ./run.sh benchmarks/mpmc-queue/testcase1 -m2 -Y -u3 -tSCFENCE &> /scratch/a
 
 real	0m0.162s
 user	0m0.143s
@@ -15,3 +14,22 @@ wildcard 5 -> memory_order_relaxed
 wildcard 6 -> memory_order_relaxed
 wildcard 7 -> memory_order_acquire
 wildcard 8 -> memory_order_release
+
+--------------------------------------------------------------------------------
+
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$
+time ./run.sh benchmarks/mpmc-queue/testcase1 -m2 -y -u3 -tSCFENCE &> /scratch/a
+
+Result 0:
+wildcard 1 -> memory_order_seq_cst
+wildcard 2 -> memory_order_release
+wildcard 3 -> memory_order_acquire
+wildcard 4 -> memory_order_seq_cst
+wildcard 5 -> memory_order_relaxed
+wildcard 6 -> memory_order_seq_cst
+wildcard 7 -> memory_order_seq_cst
+wildcard 8 -> memory_order_release
+
+real	0m0.403s
+user	0m0.348s
+sys	0m0.047s

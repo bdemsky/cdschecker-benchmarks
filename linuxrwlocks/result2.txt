@@ -1,6 +1,5 @@
-peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ time ./run.sh
-benchmarks/linuxrwlocks/testcase2 -m2 -y -u3 -tSCFENCE -o weaken -o
-fbenchmarks/linuxrwlocks/result1.txt &> /scratch/a
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$
+time ./run.sh benchmarks/linuxrwlocks/testcase2 -m2 -y -u3 -tSCFENCE -o file-benchmarks/linuxrwlocks/result1.txt &> /scratch/a
 
 real	0m0.291s
 user	0m0.207s

@@ -1,6 +1,5 @@
-peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv/benchmarks$ time
-./run.sh spsc-queue-scfence/spsc-queue -m2 -y -u3 -tSCFENCE -o weaken  &>
-/scratch/a
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv/benchmarks$
+time ./run.sh benchmarks/spsc-queue-scfence/spsc-queue -m2 -y -u3 -tSCFENCE &> /scratch/a
 
 real	0m0.050s
 user	0m0.004s

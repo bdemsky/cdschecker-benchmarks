@@ -1,6 +1,5 @@
-peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ time ./run.sh
-benchmarks/concurrent-hashmap/testcase1_wildcard -m2 -y -u3 -tSCFENCE -o weaken
-&> /scratch/a
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$
+time ./run.sh benchmarks/concurrent-hashmap/testcase1_wildcard -m2 -y -u3 -tSCFENCE &> /scratch/a
 
 real	0m0.031s
 user	0m0.015s

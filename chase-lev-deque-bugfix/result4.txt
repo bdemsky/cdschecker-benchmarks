@@ -1,6 +1,5 @@
-peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv/benchmarks$ time
-./run.sh chase-lev-deque-bugfix/testcase4_wildcard -m2 -y -u3 -tSCFENCE -o
-fchase-lev-deque-bugfix/result3.txt -o weaken &> /scratch/a
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv/benchmarks$ 
+time ./run.sh benchmarks/chase-lev-deque-bugfix/testcase4_wildcard -m2 -y -u3 -tSCFENCE -o file-benchmarks/chase-lev-deque-bugfix/result3.txt &> /scratch/a
 
 real	0m0.918s
 user	0m0.824s

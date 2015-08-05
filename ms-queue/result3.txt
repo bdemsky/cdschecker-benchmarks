@@ -1,6 +1,5 @@
-peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ time ./run.sh
-benchmarks/ms-queue/testcase3_wildcard -m2 -y -u3 -tSCFENCE -o
-fbenchmarks/ms-queue/result2.txt -o weaken  &> /scratch/a
+peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv$ 
+time ./run.sh benchmarks/ms-queue/testcase3_wildcard -m2 -y -u3 -tSCFENCE -o file-benchmarks/ms-queue/result2.txt &> /scratch/a
 
 real	0m1.040s
 user	0m0.930s
