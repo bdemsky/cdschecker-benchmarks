@@ -1,5 +1,5 @@
 peizhaoo@dw-2:~/test/model-checker-priv/model-checker-priv/benchmarks$ time
-./run.sh barrier/testcase -m2 -y -u3 -tSCFENCE &> /scratch/a
+./run.sh benchmarks/barrier/testcase -m2 -y -u3 -tSCFENCE &> /scratch/a
 
 real	0m0.060s
 user	0m0.031s
