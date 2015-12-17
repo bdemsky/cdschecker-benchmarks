@@ -6,7 +6,7 @@
 #include "model-assert.h"
 
 static int procs = 4;
-static stack_t *stack;
+static mystack_t *stack;
 static thrd_t *threads;
 static int num_threads;
 

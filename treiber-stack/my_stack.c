@@ -56,7 +56,7 @@ static void reclaim(unsigned int node)
 	MODEL_ASSERT(0);
 }
 
-void init_stack(stack_t *s, int num_threads)
+void init_stack(mystack_t *s, int num_threads)
 {
 	int i, j;
 
@@ -74,7 +74,7 @@ void init_stack(stack_t *s, int num_threads)
 	atomic_init(&s->top, MAKE_POINTER(0, 0));
 }
 
-void push(stack_t *s, unsigned int val) {
+void push(mystack_t *s, unsigned int val) {
 	unsigned int nodeIdx = new_node();
 	node_t *node = &s->nodes[nodeIdx];
 	node->value = val;
@@ -95,7 +95,7 @@ void push(stack_t *s, unsigned int val) {
 	} 
 }
 
-unsigned int pop(stack_t *s) 
+unsigned int pop(mystack_t *s) 
 {
 	pointer oldTop, newTop, next;
 	node_t *node;

@@ -1,4 +1,3 @@
-#include <iostream>
 #include <threads.h>
 #include "cliffc_hashtable.h"
 

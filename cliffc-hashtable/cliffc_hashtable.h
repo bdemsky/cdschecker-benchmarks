@@ -1,7 +1,6 @@
 #ifndef CLIFFC_HASHTABLE_H
 #define CLIFFC_HASHTABLE_H
 
-#include <iostream>
 #include <atomic>
 #include "stdio.h" 
 //#include <common.h>

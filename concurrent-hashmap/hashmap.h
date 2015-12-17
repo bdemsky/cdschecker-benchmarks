@@ -1,7 +1,6 @@
 #ifndef _HASHMAP_H
 #define _HASHMAP_H
 
-#include <iostream>
 #include <atomic>
 #include "stdio.h" 
 //#include <common.h>

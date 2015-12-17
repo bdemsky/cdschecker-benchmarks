@@ -27,9 +27,9 @@ typedef struct node {
 typedef struct {
 	pointer_t top;
 	node_t nodes[MAX_NODES + 1];
-} stack_t;
+} mystack_t;
 
-void init_stack(stack_t *s, int num_threads);
-void push(stack_t *s, unsigned int val);
-unsigned int pop(stack_t *s);
+void init_stack(mystack_t *s, int num_threads);
+void push(mystack_t *s, unsigned int val);
+unsigned int pop(mystack_t *s);
 int get_thread_num();
