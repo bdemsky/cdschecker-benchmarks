@@ -1,6 +1,7 @@
-DIRS := barrier mcs-lock mpmc-queue spsc-queue spsc-bugfix linuxrwlocks \
-	dekker-fences chase-lev-deque ms-queue chase-lev-deque-bugfix seqlock \
-	treiber-stack cliffc-hashtable concurrent-hashmap
+DIRS := register-acqrel register-relaxed ms-queue linuxrwlocks mcs-lock \
+	chase-lev-deque-bugfix treiber-stack ticket-lock seqlock read-copy-update \
+	concurrent-hashmap spsc-bugfix mpmc-queue barrier \
+	chase-lev-deque-bugfix-loose ms-queue-loose blocking-mpmc-example
 
 .PHONY: $(DIRS)
 

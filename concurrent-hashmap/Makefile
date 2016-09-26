@@ -1,28 +1,23 @@
 include ../benchmarks.mk
 
 BENCH := hashmap
-NORMAL_TESTS := testcase1 testcase2 testcase3
 
-WILDCARD_TESTS := $(patsubst %, %_wildcard, $(NORMAL_TESTS))
+BENCH_BINARY := $(BENCH).o
 
-#TESTS := $(NORMAL_TESTS) $(WILDCARD_TESTS)
-TESTS := $(NORMAL_TESTS)
+TESTS := main testcase1 testcase2
 
 all: $(TESTS)
+	../generate.sh $(notdir $(shell pwd))
 
-$(WILDCARD_TESTS): CXXFLAGS += -DWILDCARD
+%.o : %.cc
+	$(CXX) -c -fPIC -MMD -MF .$@.d -o $@ $< $(CXXFLAGS) $(LDFLAGS)
 
-$(BENCH).o : $(BENCH).h
-	$(CXX) -o $@ $< $(CXXFLAGS) -c $(LDFLAGS)
+$(TESTS): % : %.o  $(BENCH_BINARY)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
 
-$(BENCH)_wildcard.o : $(BENCH)_wildcard.h
-	$(CXX) -o $@ $< $(CXXFLAGS) -c $(LDFLAGS)
-
-$(WILDCARD_TESTS): %_wildcard : %.cc $(BENCH)_wildcard.o 
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
-
-$(NORMAL_TESTS): % : %.cc $(BENCH).o
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+-include .*.d 
 
 clean:
-	rm -f *.o *.d $(TESTS)
+	rm -rf $(TESTS) *.o .*.d *.dSYM
+
+.PHONY: clean all

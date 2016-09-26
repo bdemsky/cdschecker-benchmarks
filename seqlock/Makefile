@@ -1,9 +1,22 @@
 include ../benchmarks.mk
 
-all: seqlock
+BENCH := seqlock
+BENCH_BINARY := $(BENCH).o
 
-seqlock: seqlock.c
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+TESTS := main testcase1 testcase2
+
+all: $(TESTS)
+	../generate.sh $(notdir $(shell pwd))
+
+%.o : %.cc
+	$(CXX) -c -fPIC -MMD -MF .$@.d -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+
+$(TESTS): % : %.o  $(BENCH_BINARY)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+
+-include .*.d 
 
 clean:
-	rm -f seqlock
+	rm -rf $(TESTS) *.o .*.d *.dSYM
+
+.PHONY: clean all

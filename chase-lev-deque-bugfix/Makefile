@@ -1,17 +1,23 @@
 include ../benchmarks.mk
 
-TESTNAME = main
+BENCH := deque
 
-HEADERS = deque.h
-OBJECTS = main.o deque.o
+BENCH_BINARY := $(BENCH).o
 
-all: $(TESTNAME)
+TESTS := main testcase1 testcase2 testcase3 testcase4 testcase5 testcase6
 
-$(TESTNAME): $(HEADERS) $(OBJECTS)
-	$(CC) -o $@ $(OBJECTS) $(CPPFLAGS) $(LDFLAGS)
+all: $(TESTS)
+	../generate.sh $(notdir $(shell pwd))
 
 %.o: %.c
-	$(CC) -c -o $@ $< $(CPPFLAGS)
+	$(CC) -c -fPIC -MMD -MF .$@.d -o $@ $< $(CFLAGS) $(LDFLAGS)
+
+$(TESTS): %: %.o $(BENCH_BINARY)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
+-include .*.d 
 
 clean:
-	rm -f $(TESTNAME) *.o
+	rm -rf $(TESTS) *.o .*.d *.dSYM
+
+.PHONY: clean all

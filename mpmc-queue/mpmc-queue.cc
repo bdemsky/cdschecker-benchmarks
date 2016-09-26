@@ -1,140 +1,120 @@
-#include <inttypes.h>
-#include <threads.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-
-#include <librace.h>
-
+#include <threads.h> 
 #include "mpmc-queue.h"
 
-void threadA(struct mpmc_boundq_1_alt<int32_t, sizeof(int32_t)> *queue)
-{
-	int32_t *bin = queue->write_prepare();
-	store_32(bin, 1);
-	queue->write_publish();
-}
+template <typename t_element>
+t_element * mpmc_boundq_1_alt<t_element>::read_fetch() {
+	// FIXME: We can have a relaxed for sure here since the next CAS
+	// will fix the problem
+	unsigned int rdwr = m_rdwr.load(mo_acquire);
+	unsigned int rd,wr;
+	for(;;) {
+		rd = (rdwr>>16) & 0xFFFF;
+		wr = rdwr & 0xFFFF;
 
-void threadB(struct mpmc_boundq_1_alt<int32_t, sizeof(int32_t)> *queue)
-{
-	int32_t *bin;
-	while ((bin = queue->read_fetch()) != NULL) {
-		printf("Read: %d\n", load_32(bin));
-		queue->read_consume();
-	}
-}
+		if ( wr == rd ) // empty
+			return NULL;
 
-void threadC(struct mpmc_boundq_1_alt<int32_t, sizeof(int32_t)> *queue)
-{
-	int32_t *bin = queue->write_prepare();
-	store_32(bin, 1);
-	queue->write_publish();
-
-	while ((bin = queue->read_fetch()) != NULL) {
-		printf("Read: %d\n", load_32(bin));
-		queue->read_consume();
-	}
-}
-
-#define MAXREADERS 3
-#define MAXWRITERS 3
-#define MAXRDWR 3
-
-#ifdef CONFIG_MPMC_READERS
-#define DEFAULT_READERS (CONFIG_MPMC_READERS)
-#else
-#define DEFAULT_READERS 2
-#endif
-
-#ifdef CONFIG_MPMC_WRITERS
-#define DEFAULT_WRITERS (CONFIG_MPMC_WRITERS)
-#else
-#define DEFAULT_WRITERS 2
-#endif
-
-#ifdef CONFIG_MPMC_RDWR
-#define DEFAULT_RDWR (CONFIG_MPMC_RDWR)
-#else
-#define DEFAULT_RDWR 0
-#endif
-
-int readers = DEFAULT_READERS, writers = DEFAULT_WRITERS, rdwr = DEFAULT_RDWR;
-
-void print_usage()
-{
-	printf("Error: use the following options\n"
-		" -r <num>              Choose number of reader threads\n"
-		" -w <num>              Choose number of writer threads\n");
-	exit(EXIT_FAILURE);
-}
-
-void process_params(int argc, char **argv)
-{
-	const char *shortopts = "hr:w:";
-	int opt;
-	bool error = false;
-
-	while (!error && (opt = getopt(argc, argv, shortopts)) != -1) {
-		switch (opt) {
-		case 'h':
-			print_usage();
+		if ( m_rdwr.compare_exchange_weak(rdwr,rdwr+(1<<16),mo_acq_rel) )
 			break;
-		case 'r':
-			readers = atoi(optarg);
-			break;
-		case 'w':
-			writers = atoi(optarg);
-			break;
-		default: /* '?' */
-			error = true;
-			break;
-		}
+		else
+			thrd_yield();
 	}
 
-	if (writers < 1 || writers > MAXWRITERS)
-		error = true;
-	if (readers < 1 || readers > MAXREADERS)
-		error = true;
+	// (*1)
+	rl::backoff bo;
+	/**********    Detected Admissibility (testcase1)    **********/
+	while ( (m_written.load(mo_acquire) & 0xFFFF) != wr ) {
+		thrd_yield();
+	}
+	/** @OPDefine: true */
 
-	if (error)
-		print_usage();
+	t_element * p = & ( m_array[ rd % t_size ] );
+
+	return p;
 }
 
-int user_main(int argc, char **argv)
+
+template <typename t_element>
+void mpmc_boundq_1_alt<t_element>::read_consume(t_element *bin) {
+	/**********    Detected Admissibility (testcase2)    **********/
+    // run with -Y
+	m_read.fetch_add(1,mo_release);
+	/** @OPDefine: true */
+}
+
+
+template <typename t_element>
+t_element * mpmc_boundq_1_alt<t_element>::write_prepare() {
+	// FIXME: We can have a relaxed for sure here since the next CAS
+	// will fix the problem
+	unsigned int rdwr = m_rdwr.load(mo_acquire);
+	unsigned int rd,wr;
+	for(;;) {
+		rd = (rdwr>>16) & 0xFFFF;
+		wr = rdwr & 0xFFFF;
+
+		if ( wr == ((rd + t_size)&0xFFFF) ) // full
+			return NULL;
+
+		if ( m_rdwr.compare_exchange_weak(rdwr,(rd<<16) | ((wr+1)&0xFFFF),mo_acq_rel) )
+			break;
+		else
+			thrd_yield();
+	}
+
+	// (*1)
+	rl::backoff bo;
+	/**********    Detected Admissibility (testcase2)    **********/
+    // run with -Y
+	while ( (m_read.load(mo_acquire) & 0xFFFF) != rd ) {
+		thrd_yield();
+	}
+	/** @OPDefine: true */
+
+	t_element * p = & ( m_array[ wr % t_size ] );
+
+	return p;
+}
+
+template <typename t_element>
+void mpmc_boundq_1_alt<t_element>::write_publish(t_element *bin)
 {
-	struct mpmc_boundq_1_alt<int32_t, sizeof(int32_t)> queue;
-	thrd_t A[MAXWRITERS], B[MAXREADERS], C[MAXRDWR];
+	/**********    Detected Admissibility (testcase1)    **********/
+	m_written.fetch_add(1,mo_release);
+	/** @OPDefine: true */
+}
 
-	/* Note: optarg() / optind is broken in model-checker - workaround is
-	 * to just copy&paste this test a few times */
-	//process_params(argc, argv);
-	printf("%d reader(s), %d writer(s)\n", readers, writers);
+/** @DeclareState: 
+	@Commutativity: write_prepare <-> write_publish (M1->C_RET == M2->bin)
+	@Commutativity: write_publish <-> read_fetch (M1->bin == M2->C_RET)
+	@Commutativity: read_fetch <-> read_consume (M1->C_RET == M2->bin) 
+	@Commutativity: read_consume <-> write_prepare (M1->bin == M2->C_RET) */
 
-#ifndef CONFIG_MPMC_NO_INITIAL_ELEMENT
-	printf("Adding initial element\n");
-	int32_t *bin = queue.write_prepare();
-	store_32(bin, 17);
-	queue.write_publish();
-#endif
 
-	printf("Start threads\n");
+mpmc_boundq_1_alt<int32_t>* createMPMC(int size) {
+	return new mpmc_boundq_1_alt<int32_t>(size);
+}
 
-	for (int i = 0; i < writers; i++)
-		thrd_create(&A[i], (thrd_start_t)&threadA, &queue);
-	for (int i = 0; i < readers; i++)
-		thrd_create(&B[i], (thrd_start_t)&threadB, &queue);
+void destroyMPMC(mpmc_boundq_1_alt<int32_t> *q) {
+	delete q;
+}
 
-	for (int i = 0; i < rdwr; i++)
-		thrd_create(&C[i], (thrd_start_t)&threadC, &queue);
+/** @PreCondition: */
+int32_t * read_fetch(mpmc_boundq_1_alt<int32_t> *q) {
+	return q->read_fetch();
+}
 
-	for (int i = 0; i < writers; i++)
-		thrd_join(A[i]);
-	for (int i = 0; i < readers; i++)
-		thrd_join(B[i]);
-	for (int i = 0; i < rdwr; i++)
-		thrd_join(C[i]);
+/** @PreCondition: */
+void read_consume(mpmc_boundq_1_alt<int32_t> *q, int32_t *bin) {
+	q->read_consume(bin);
+}
 
-	printf("Threads complete\n");
+/** @PreCondition: */
+int32_t * write_prepare(mpmc_boundq_1_alt<int32_t> *q) {
+	return q->write_prepare();
+}
 
-	return 0;
+/** @PreCondition: */
+void write_publish(mpmc_boundq_1_alt<int32_t> *q, int32_t *bin) {
+	q->write_publish(bin);
 }

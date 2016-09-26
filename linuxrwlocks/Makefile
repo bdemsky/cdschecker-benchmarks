@@ -1,11 +1,23 @@
 include ../benchmarks.mk
 
-TESTNAME = linuxrwlocks
+BENCH := linuxrwlocks
 
-all: $(TESTNAME)
+BENCH_BINARY := $(BENCH).o
 
-$(TESTNAME): $(TESTNAME).c
-	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
+TESTS := main testcase1 testcase2 testcase3
+
+all: $(TESTS)
+	../generate.sh $(notdir $(shell pwd))
+
+%.o : %.c
+	$(CC) -c -fPIC -MMD -MF .$@.d -o $@ $< $(CFLAGS) $(LDFLAGS)
+
+$(TESTS): % : %.o  $(BENCH_BINARY)
+	$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
+
+-include .*.d 
 
 clean:
-	rm -f $(TESTNAME) *.o
+	rm -rf $(TESTS) *.o .*.d *.dSYM
+
+.PHONY: clean all

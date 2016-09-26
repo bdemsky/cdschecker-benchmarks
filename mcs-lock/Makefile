@@ -1,11 +1,23 @@
 include ../benchmarks.mk
 
-TESTNAME = mcs-lock
+BENCH := mcs-lock
 
-all: $(TESTNAME)
+BENCH_BINARY := $(BENCH).o
 
-$(TESTNAME): $(TESTNAME).cc $(TESTNAME).h
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+TESTS := main testcase
+
+all: $(TESTS)
+	../generate.sh $(notdir $(shell pwd))
+
+%.o : %.cc
+	$(CXX) -c -fPIC -MMD -MF .$@.d -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+
+$(TESTS): % : %.o  $(BENCH_BINARY)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+
+-include .*.d 
 
 clean:
-	rm -f $(TESTNAME) *.o
+	rm -rf $(TESTS) *.o .*.d *.dSYM
+
+.PHONY: clean all

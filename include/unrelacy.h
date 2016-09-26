@@ -11,18 +11,25 @@
 #include <librace.h>
 
 #define $
-
+#ifndef ASSRT
 #define ASSERT(expr) MODEL_ASSERT(expr)
+#endif
 #define RL_ASSERT(expr) MODEL_ASSERT(expr)
 
 #define RL_NEW new
 #define RL_DELETE(expr) delete expr
 
-#define mo_seqcst memory_order_relaxed
+#define mo_seqcst memory_order_seq_cst
 #define mo_release memory_order_release
 #define mo_acquire memory_order_acquire
 #define mo_acq_rel memory_order_acq_rel
 #define mo_relaxed memory_order_relaxed
+
+#define seq_cst memory_order_seq_cst
+#define release memory_order_release
+#define acquire memory_order_acquire
+#define acq_rel memory_order_acq_rel
+#define relaxed memory_order_relaxed
 
 namespace rl {
 

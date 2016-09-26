@@ -1,3 +1,6 @@
+#ifndef _SPSC_QUEUE_H
+#define _SPSC_QUEUE_H
+
 #include <unrelacy.h>
 #include <atomic>
 
@@ -17,39 +20,20 @@ public:
 	~spsc_queue()
 	{
 		RL_ASSERT(head == tail);
-		delete ((node*)head($));
+		//delete ((node*)head($));
+		delete ((node*)head);
 	}
 
-	void enqueue(T data)
-	{
-		node* n = new node (data);
-		head($)->next.store(n, std::memory_order_release);
-		head = n;
-		ec.signal();
-	}
+	void enqueue(T data);
 
-	T dequeue()
-	{
-		T data = try_dequeue();
-		while (0 == data)
-		{
-			int cmp = ec.get();
-			data = try_dequeue();
-			if (data)
-				break;
-			ec.wait(cmp);
-			data = try_dequeue();
-			if (data)
-				break;
-		}
-		return data;
-	}
+	T dequeue();
 
 private:
 	struct node
 	{
 		std::atomic<node*> next;
-		rl::var<T> data;
+		//rl::var<T> data;
+		T data;
 
 		node(T data = T())
 			: data(data)
@@ -58,20 +42,20 @@ private:
 		}
 	};
 
+	/* Use normal memory access
 	rl::var<node*> head;
 	rl::var<node*> tail;
+	*/
+	node *head;
+	node *tail;
 
 	eventcount ec;
 
-	T try_dequeue()
-	{
-		node* t = tail($);
-		node* n = t->next.load(std::memory_order_acquire);
-		if (0 == n)
-			return 0;
-		T data = n->data($);
-		delete (t);
-		tail = n;
-		return data;
-	}
+	T try_dequeue();
 };
+
+// C Interface
+void enqueue(spsc_queue<int> *q, int data);
+int dequeue(spsc_queue<int> *q);
+
+#endif

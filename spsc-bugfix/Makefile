@@ -1,23 +1,23 @@
 include ../benchmarks.mk
 
-TESTNAME = spsc-queue
-RELACYNAME = spsc-relacy
+BENCH := queue
 
-all: $(TESTNAME)
+BENCH_BINARY := $(BENCH).o
 
-$(TESTNAME): $(TESTNAME).cc queue.h eventcount.h
-	$(CXX) -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+TESTS := main testcase1
 
-relacy: $(RELACYNAME)
+all: $(TESTS)
+	../generate.sh $(notdir $(shell pwd))
 
-$(RELACYNAME): spsc-relacy.cc queue-relacy.h eventcount-relacy.h
-ifdef RELACYPATH
-	$(CXX) -o $(RELACYNAME) spsc-relacy.cc -I$(RELACYPATH) -Wno-deprecated
-else
-	@echo "Please define RELACYPATH"
-	@echo "  e.g., make RELACYPATH=/path-to-relacy"
-	@exit 1
-endif
+%.o : %.cc
+	$(CXX) -c -fPIC -MMD -MF .$@.d -o $@ $< $(CXXFLAGS) $(LDFLAGS)
+
+$(TESTS): % : %.o  $(BENCH_BINARY)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
+
+-include .*.d 
 
 clean:
-	rm -f $(TESTNAME) $(RELACYNAME) *.o
+	rm -rf $(TESTS) *.o .*.d *.dSYM
+
+.PHONY: clean all

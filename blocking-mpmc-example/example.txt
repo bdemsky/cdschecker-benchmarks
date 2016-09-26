@@ -1,0 +1,39 @@
+class Queue {
+/** @DeclareState: IntList *q;
+@Commutativity:enq<->deq(true)
+@Commutativity:deq<->deq(!M1->RET||!M2->RET) */
+public: atomic<Node*> tail, head;
+Queue() { tail = head = new Node(); }
+/** @Transition: STATE(q)->push_back(val); */
+void Queue::enq(unsigned int val) {
+  Node *n = new Node(val);
+  while(true) {
+    Node *t = tail.load(acquire);
+    Node *next = t->next.load(relaxed);
+    if(next) continue;
+    if(t->next.CAS(next, n, relaxed)) {
+	  /** @OPDefine: true */
+      tail.store(n, release);
+      return;
+    }
+  }
+}
+/**@PreCondition:
+return RET ? !STATE(q)->empty()
+	&& STATE(q)->front() == RET : true;
+@Transition: if (RET) {
+	if (STATE(q)->empty()) return false;
+	STATE(q)->pop_front();
+} */
+unsigned int Queue::deq() {
+  while(true) {
+    Node *h = head.load(acquire);
+    Node *t = tail.load(acquire);
+    Node *next = h->next.load(relaxed);
+	/** @OPClearDefine: true */
+    if(h == t) return 0;
+    if(head.CAS(h, next, release))
+	  return next->data;
+  }
+}
+};

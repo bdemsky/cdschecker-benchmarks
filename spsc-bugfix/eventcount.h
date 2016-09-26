@@ -1,3 +1,6 @@
+#ifndef _EVENTCOUNT_H_
+#define _EVENTCOUNT_H_
+
 #include <unrelacy.h>
 #include <atomic>
 #include <mutex>
@@ -67,3 +70,5 @@ private:
 		}
 	}
 };
+
+#endif

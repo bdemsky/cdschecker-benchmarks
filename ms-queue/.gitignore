@@ -1,1 +1,8 @@
-/main
+main
+testcase1
+testcase2
+testcase3
+testcase4
+*.dSYM/
+*.o
+.*.d
