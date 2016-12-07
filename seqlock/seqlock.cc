@@ -20,6 +20,8 @@ void seqlock::read(int *data1, int *data2) {
 		/**********    Detected Correctness (testcase1)    **********/
 		int old_seq = _seq.load(memory_order_acquire); // acquire
 		if (old_seq % 2 == 1) {
+            // The thrd_yield() operation is just for fairness but won't affect
+            // the correctness (and also the specification).
             thrd_yield();
             continue;
         }
@@ -35,6 +37,8 @@ void seqlock::read(int *data1, int *data2) {
 		/**********    Detected Correctness (testcase1)    **********/
 		atomic_thread_fence(memory_order_acquire);
 		if (_seq.load(memory_order_relaxed) == old_seq) { // relaxed
+            // The thrd_yield() operation is just for fairness but won't affect
+            // the correctness (and also the specification).
             thrd_yield();
 			return;
 		}
@@ -51,6 +55,8 @@ void seqlock::write(int data1, int data2) {
 		/**********    Detected Correctness (testcase2 with -y -x1000)    **********/
 		int old_seq = _seq.load(memory_order_acquire); // acquire
 		if (old_seq % 2 == 1) {
+            // The thrd_yield() operation is just for fairness but won't affect
+            // the correctness (and also the specification).
             thrd_yield();
 			continue; // Retry
         }
@@ -58,6 +64,8 @@ void seqlock::write(int data1, int data2) {
 		// #2
 		if (_seq.compare_exchange_strong(old_seq, old_seq + 1,
 			memory_order_relaxed, memory_order_relaxed)) {
+            // The thrd_yield() operation is just for fairness but won't affect
+            // the correctness (and also the specification).
             thrd_yield();
 			break;
 		}
