@@ -1,0 +1,12 @@
+21,22c21,22
+< 	*data1 = res->data1;
+< 	*data2 = res->data2;
+---
+> 	*data1 = res->data1.load(memory_order_relaxed);
+> 	*data2 = res->data2.load(memory_order_relaxed);
+27,28c27,28
+< 	newPtr->data1 = prev->data1 + d1;
+< 	newPtr->data2 = prev->data2 + d2;
+---
+> 	newPtr->data1.store(prev->data1.load(memory_order_relaxed) + d1, memory_order_relaxed);
+> 	newPtr->data2.store(prev->data2.load(memory_order_relaxed) + d2, memory_order_relaxed);
