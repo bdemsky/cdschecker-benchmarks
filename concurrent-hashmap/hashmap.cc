@@ -20,12 +20,18 @@ int HashMap::get(int key) {
 	// lock, we ignore this operation for the SC analysis, and otherwise we
 	// take it into consideration
 	
+    // XXX-injection-#1: Weaken the parameter "mo_acquire" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./concurrent-hashmap/testcase2 -m2 -y -u3 -tSPEC"
 	/**********    Detected UL (testcase2) **********/
 	Entry *firstPtr = first->load(mo_acquire);
 
 	e = firstPtr;
 	while (e != NULL) {
 		if (e->hash == hash && eq(key, e->key)) {
+            // XXX-injection-#2: Weaken the parameter "mo_seqcst" to
+            // "memory_order_acq_rel", run "make" to recompile, and then run:
+            // "./run.sh ./concurrent-hashmap/testcase1 -m2 -y -u3 -tSPEC"
 			/**********    Detected Correctness (testcase1) **********/
 			res = e->value.load(mo_seqcst);
 			/** @OPClearDefine: res != 0 */
@@ -88,6 +94,9 @@ int HashMap::put(int key, int value) {
 			// FIXME: This could be a relaxed (because locking synchronize
 			// with the previous put())??  no need to be acquire
 			oldValue = e->value.load(relaxed);
+            // XXX-injection-#3: Weaken the parameter "mo_seqcst" to
+            // "memory_order_acq_rel", run "make" to recompile, and then run:
+            // "./run.sh ./concurrent-hashmap/testcase1 -m2 -y -u3 -tSPEC"
 			/**********    Detected Correctness (testcase1) **********/
 			e->value.store(value, mo_seqcst);
 			/** @OPClearDefine: true */
@@ -105,6 +114,9 @@ int HashMap::put(int key, int value) {
 	newEntry->value.store(value, relaxed);
 	/** @OPClearDefine: true */
 	newEntry->next.store(firstPtr, relaxed);
+    // XXX-injection-#4: Weaken the parameter "mo_release" to
+    // "memory_order_acquire", run "make" to recompile, and then run:
+    // "./run.sh ./concurrent-hashmap/testcase2 -m2 -y -u3 -tSPEC"
 	/**********    Detected UL (testcase2) **********/
 	// Publish the newEntry to others
 	first->store(newEntry, mo_release);

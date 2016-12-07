@@ -109,13 +109,25 @@ void enqueue(queue_t *q, unsigned int val, int n)
 	q->nodes[node].value = val;
 	tmp = atomic_load_explicit(&q->nodes[node].next, relaxed);
 	set_ptr(&tmp, 0); // NULL
-	// This is a found bug in AutoMO, and testcase4 can reveal this known bug
+    // XXX-known-bug-#1: This is a found bug in AutoMO, and testcase4 can reveal
+    // this known bug.
+    // To reproduce, weaken the parameter "memory_order_release" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./ms-queue/testcase4 -m2 -y -u3 -tSPEC"
 	/**********    Detected KNOWN BUG (testcase4)    **********/
 	atomic_store_explicit(&q->nodes[node].next, tmp, release);
 
 	while (!success) {
-		/**********    Detected UL    **********/
+        // XXX-injection-#1: To reproduce, weaken the parameter
+        // "memory_order_acquire" to "memory_order_relaxed", run "make" to
+        // recompile, and then run:
+        // "./run.sh ./ms-queue/testcase2 -m2 -y -u3 -tSPEC"
+		/**********    Detected UL (testcase2)    **********/
 		tail = atomic_load_explicit(&q->tail, acquire);
+        // XXX-injection-#2: To reproduce, weaken the parameter
+        // "memory_order_acquire" to "memory_order_relaxed", run "make" to
+        // recompile, and then run:
+        // "./run.sh ./ms-queue/testcase4 -m2 -y -u3 -tSPEC"
 		/**********    Detected Correctness (testcase4)    **********/
 		next = atomic_load_explicit(&q->nodes[get_ptr(tail)].next, acquire);
 		if (tail == atomic_load_explicit(&q->tail, relaxed)) {
@@ -125,16 +137,28 @@ void enqueue(queue_t *q, unsigned int val, int n)
 
 			if (get_ptr(next) == 0) { // == NULL
 				pointer value = MAKE_POINTER(node, get_count(next) + 1);
+                // XXX-injection-#3: To reproduce, weaken the parameter
+                // "memory_order_release" to "memory_order_relaxed", run "make" to
+                // recompile, and then run:
+                // "./run.sh ./ms-queue/testcase1 -m2 -y -u3 -tSPEC"
 				/**********    Detected Correctness (testcase1)    **********/
 				success = atomic_compare_exchange_strong_explicit(&q->nodes[get_ptr(tail)].next,
 						&next, value, release, release);
 				/** @OPClearDefine: success */
 			}
 			if (!success) {
-				/**********    Detected UL    **********/
+                // XXX-injection-#4: To reproduce, weaken the parameter
+                // "memory_order_acquire" to "memory_order_relaxed", run "make" to
+                // recompile, and then run:
+                // "./run.sh ./ms-queue/testcase2 -m2 -y -u3 -tSPEC"
+				/**********    Detected UL (testcase2)    **********/
 				unsigned int ptr = get_ptr(atomic_load_explicit(&q->nodes[get_ptr(tail)].next, acquire));
 				pointer value = MAKE_POINTER(ptr,
 						get_count(tail) + 1);
+                // XXX-injection-#5: To reproduce, weaken the parameter
+                // "memory_order_release" to "memory_order_relaxed", run "make" to
+                // recompile, and then run:
+                // "./run.sh ./ms-queue/testcase2 -m2 -y -u3 -tSPEC"
 				/**********    Detected Correctness (testcase2)    **********/
 				atomic_compare_exchange_strong_explicit(&q->tail,
 						&tail, value,
@@ -143,6 +167,11 @@ void enqueue(queue_t *q, unsigned int val, int n)
 			}
 		}
 	}
+
+    // XXX-injection-#6: To reproduce, weaken the parameter
+    // "memory_order_release" to "memory_order_relaxed", run "make" to
+    // recompile, and then run:
+    // "./run.sh ./ms-queue/testcase1 -m2 -y -u3 -tSPEC"
 	/**********    Detected Corrctness (testcase1) **********/
 	atomic_compare_exchange_strong_explicit(&q->tail,
 			&tail,
@@ -151,7 +180,7 @@ void enqueue(queue_t *q, unsigned int val, int n)
 }
 
 /** @Transition: S_RET = STATE(q)->empty() ? 0 : STATE(q)->front();
-if (S_RET) STATE(q)->pop_front();
+if (S_RET && C_RET) STATE(q)->pop_front();
 @JustifyingPostcondition: if (!C_RET)
     return S_RET == C_RET;
 @PostCondition: return C_RET ? *retVal  == S_RET : true;
@@ -166,10 +195,24 @@ int dequeue(queue_t *q, unsigned int *retVal, unsigned int *reclaimNode)
 	pointer next;
 
 	while (!success) {
-		/**********    Dectected Correctness (testcase3)    **********/
+        // XXX-injection-#7: To reproduce, weaken the parameter
+        // "memory_order_acquire" to "memory_order_relaxed", run "make" to
+        // recompile, and then run:
+        // "./run.sh ./ms-queue/testcase3 -m2 -y -u3 -tSPEC"
+		/**********    Detected Correctness (testcase3)    **********/
 		head = atomic_load_explicit(&q->head, acquire);
+        // To reproduce, weaken the parameter "memory_order_acquire" to
+        // "memory_order_relaxed", run "make" to recompile, and then run:
+        // "./run.sh ./ms-queue/testcase4 -m2 -y -u3 -tSPEC"
+        // XXX-known-bug-#2: This is another known bug, and testcase2 can reveal
+        // this known bug
 		/**********    Detected KNOWN BUG (testcase2)    **********/
 		tail = atomic_load_explicit(&q->tail, acquire);
+
+        // XXX-injection-#8: To reproduce, weaken the parameter
+        // "memory_order_acquire" to "memory_order_relaxed", run "make" to
+        // recompile, and then run:
+        // "./run.sh ./ms-queue/testcase1 -m2 -y -u3 -tSPEC"
 		/**********    Detected Correctness (testcase1) **********/
 		next = atomic_load_explicit(&q->nodes[get_ptr(head)].next, acquire);
 		/** @OPClearDefine: true */
@@ -182,7 +225,12 @@ int dequeue(queue_t *q, unsigned int *retVal, unsigned int *reclaimNode)
 				if (get_ptr(next) == 0) { // NULL
 					return false; // NULL
 				}
-				/**********    Detected UL    **********/
+
+                // XXX-injection-#9: To reproduce, weaken the parameter
+                // "memory_order_release" to "memory_order_relaxed", run "make" to
+                // recompile, and then run:
+                // "./run.sh ./ms-queue/testcase2 -m2 -y -u3 -tSPEC"
+				/**********    Detected UL (testcase2)    **********/
 				atomic_compare_exchange_strong_explicit(&q->tail,
 						&tail,
 						MAKE_POINTER(get_ptr(next), get_count(tail) + 1),
@@ -191,6 +239,11 @@ int dequeue(queue_t *q, unsigned int *retVal, unsigned int *reclaimNode)
 			} else {
 				//*retVal = load_32(&q->nodes[get_ptr(next)].value);
 				*retVal = q->nodes[get_ptr(next)].value;
+
+                // XXX-injection-#10: To reproduce, weaken the parameter
+                // "memory_order_release" to "memory_order_relaxed", run "make" to
+                // recompile, and then run:
+                // "./run.sh ./ms-queue/testcase3 -m2 -y -u3 -tSPEC"
 				/**********    Detected Correctness (testcase3)    **********/
 				success = atomic_compare_exchange_strong_explicit(&q->head,
 						&head,

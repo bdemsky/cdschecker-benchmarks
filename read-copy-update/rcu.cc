@@ -12,6 +12,9 @@ atomic<Data*> dataPtr;
 
 /** @JustifyingPrecondition: return STATE(data1) == *data1 && STATE(data2) == *data2; */
 void read(int *data1, int *data2) {
+    // XXX-injection-#1: Weaken the parameter "memory_order_acquire" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./read-copy-update/testcase -m2 -y -u3 -tSPEC"
 	/**********    Detected Correctness **********/
 	Data *res = dataPtr.load(memory_order_acquire);
 	/** @OPDefine: true */
@@ -31,9 +34,16 @@ void write(int data1, int data2) {
 	bool succ = false;
 	Data *tmp = new Data;
 	do {
+        // XXX-injection-#2: Weaken the parameter "memory_order_acquire" to
+        // "memory_order_relaxed", run "make" to recompile, and then run:
+        // "./run.sh ./read-copy-update/testcase -m2 -y -u3 -tSPEC"
 		/**********    Detected Correctness **********/
 		Data *prev = dataPtr.load(memory_order_acquire);
 		inc(tmp, prev, data1, data2);
+
+        // XXX-injection-#3: Weaken the parameter "memory_order_release" to
+        // "memory_order_relaxed", run "make" to recompile, and then run:
+        // "./run.sh ./read-copy-update/testcase -m2 -y -u3 -tSPEC"
 		/**********    Detected Correctness **********/
 		succ = dataPtr.compare_exchange_strong(prev, tmp,
             memory_order_release, memory_order_relaxed);

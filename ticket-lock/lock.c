@@ -27,6 +27,9 @@ void lock(struct TicketLock *l) {
 		memory_order_relaxed);
 	// Spinning for my turn
 	while (true) {
+        // XXX-injection-#1: Weaken the parameter "memory_order_acquire" to
+        // "memory_order_relaxed", run "make" to recompile, and then run:
+        // "./run.sh ./ticket-lock/testcase1 -m2 -Y -u3 -tSPEC"
 		/**********    Detected Correctness (testcase1 with -Y)    **********/
 		unsigned turn = atomic_load_explicit(&l->turn, memory_order_acquire);
 		/** @OPDefine: turn == ticket */
@@ -42,6 +45,9 @@ void lock(struct TicketLock *l) {
 @Transition: STATE(lock) = false; */
 void unlock(struct TicketLock *l) {
 	unsigned turn = atomic_load_explicit(&l->turn, memory_order_relaxed);
+    // XXX-injection-#2: Weaken the parameter "memory_order_release" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./ticket-lock/testcase1 -m2 -Y -u3 -tSPEC"
 	/**********    Detected Correctness (testcase1 with -Y)    **********/
 	atomic_store_explicit(&l->turn, turn + 1, memory_order_release);
 	/** @OPDefine: true */

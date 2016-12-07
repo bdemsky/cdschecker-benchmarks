@@ -33,10 +33,10 @@ static void main_task(void *param)
 	unsigned int val;
 	int pid = *((int *)param);
 	if (pid % 2 == 0) {
-		enqueue(queue, 0, 0);
+		enqueue(queue, 1, 0);
 		succ1 = dequeue(queue, &idx1, &reclaimNode);
 	} else {
-		enqueue(queue, 1, 0);
+		enqueue(queue, 2, 0);
 		succ2 = dequeue(queue, &idx2, &reclaimNode);
 	}
 }

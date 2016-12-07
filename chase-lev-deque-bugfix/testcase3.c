@@ -42,7 +42,7 @@ int user_main(int argc, char **argv)
 
 	int d =take(q);
 	bool correct= b == 1 && c == 2 && a == 2 ;
-	MODEL_ASSERT(!correct);
+	//MODEL_ASSERT(!correct);
 /*
 	bool correct=true;
 	if (a!=1 && a!=2 && a!=4 && a!= EMPTY)

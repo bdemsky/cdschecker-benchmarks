@@ -4,6 +4,9 @@ template<typename T>
 void spsc_queue<T>::enqueue(T data)
 {
 	node* n = new node (data);
+    // XXX-injection-#1: Weaken the parameter "memory_order_release" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./spsc-bugfix/testcase1 -m2 -y -u3 -tSPEC"
 	/**********    Detected Correctness    **********/
 	//head($)->next.store(n, std::memory_order_release);
 	head->next.store(n, std::memory_order_release);
@@ -36,6 +39,9 @@ T spsc_queue<T>::try_dequeue()
 {
 	//node* t = tail($);
 	node* t = tail;
+    // XXX-injection-#2: Weaken the parameter "memory_order_acquire" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./spsc-bugfix/testcase1 -m2 -y -u3 -tSPEC"
 	/**********    Detected Correctness    **********/
 	node* n = t->next.load(std::memory_order_acquire);
 	/** @OPClearDefine: true */

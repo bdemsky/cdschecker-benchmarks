@@ -3,7 +3,7 @@
 
 template <typename t_element>
 t_element * mpmc_boundq_1_alt<t_element>::read_fetch() {
-	// FIXME: We can have a relaxed for sure here since the next CAS
+	// We can have a relaxed for sure here since the next CAS
 	// will fix the problem
 	unsigned int rdwr = m_rdwr.load(mo_acquire);
 	unsigned int rd,wr;
@@ -13,7 +13,21 @@ t_element * mpmc_boundq_1_alt<t_element>::read_fetch() {
 
 		if ( wr == rd ) // empty
 			return NULL;
+ 
+         // XXX-injection-#1: Weaken the parameter "mo_acq_rel" to
+        // "memory_order_release", run "make" to recompile, and then run:
+        // "./run.sh ./mpmc-queue/testcase2 -m2 -Y -u3 -tSPEC"
 
+        // XXX-injection-#2: Weaken the parameter "mo_acq_rel" to
+        // "memory_order_acquire", run "make" to recompile, and then run:
+        // "./run.sh ./mpmc-queue/testcase2 -m2 -Y -u3 -tSPEC"
+
+        // We missed both injections (#1 & #2). For the reason, you can see the
+        // discussion on MPMC queue in the last paragraph in Section 6.4.2 of
+        // our paper. Note that we have more injections than the original
+        // submission since we directly weakened mo_acq_rel to mo_relaxed.
+        // Reviews suggest us to do a partial relaxations, i.e., mo_acq_rel ->
+        // mo_acquire and mo_acq_rel -> mo_release.
 		if ( m_rdwr.compare_exchange_weak(rdwr,rdwr+(1<<16),mo_acq_rel) )
 			break;
 		else
@@ -22,6 +36,9 @@ t_element * mpmc_boundq_1_alt<t_element>::read_fetch() {
 
 	// (*1)
 	rl::backoff bo;
+    // XXX-injection-#3: Weaken the parameter "mo_acquire" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./mpmc-queue/testcase1 -m2 -y -u3 -tSPEC"
 	/**********    Detected Admissibility (testcase1)    **********/
 	while ( (m_written.load(mo_acquire) & 0xFFFF) != wr ) {
 		thrd_yield();
@@ -36,8 +53,10 @@ t_element * mpmc_boundq_1_alt<t_element>::read_fetch() {
 
 template <typename t_element>
 void mpmc_boundq_1_alt<t_element>::read_consume(t_element *bin) {
+    // XXX-injection-#4: Weaken the parameter "mo_release" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./mpmc-queue/testcase2 -m2 -Y -u3 -tSPEC"
 	/**********    Detected Admissibility (testcase2)    **********/
-    // run with -Y
 	m_read.fetch_add(1,mo_release);
 	/** @OPDefine: true */
 }
@@ -45,7 +64,7 @@ void mpmc_boundq_1_alt<t_element>::read_consume(t_element *bin) {
 
 template <typename t_element>
 t_element * mpmc_boundq_1_alt<t_element>::write_prepare() {
-	// FIXME: We can have a relaxed for sure here since the next CAS
+	// We can have a relaxed for sure here since the next CAS
 	// will fix the problem
 	unsigned int rdwr = m_rdwr.load(mo_acquire);
 	unsigned int rd,wr;
@@ -56,6 +75,20 @@ t_element * mpmc_boundq_1_alt<t_element>::write_prepare() {
 		if ( wr == ((rd + t_size)&0xFFFF) ) // full
 			return NULL;
 
+        // XXX-injection-#5: Weaken the parameter "mo_acq_rel" to
+        // "memory_order_release", run "make" to recompile, and then run:
+        // "./run.sh ./mpmc-queue/testcase2 -m2 -Y -u3 -tSPEC"
+
+        // XXX-injection-#6: Weaken the parameter "mo_acq_rel" to
+        // "memory_order_acquire", run "make" to recompile, and then run:
+        // "./run.sh ./mpmc-queue/testcase2 -m2 -Y -u3 -tSPEC"
+
+        // We missed both injections (#5 & #6). For the reason, you can see the
+        // discussion on MPMC queue in the last paragraph in Section 6.4.2 of
+        // our paper. Note that we have more injections than the original
+        // submission since we directly weakened mo_acq_rel to mo_relaxed.
+        // Reviews suggest us to do a partial relaxations, i.e., mo_acq_rel ->
+        // mo_acquire and mo_acq_rel -> mo_release.
 		if ( m_rdwr.compare_exchange_weak(rdwr,(rd<<16) | ((wr+1)&0xFFFF),mo_acq_rel) )
 			break;
 		else
@@ -64,6 +97,9 @@ t_element * mpmc_boundq_1_alt<t_element>::write_prepare() {
 
 	// (*1)
 	rl::backoff bo;
+    // XXX-injection-#7: Weaken the parameter "mo_acquire" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./mpmc-queue/testcase2 -m2 -Y -u3 -tSPEC"
 	/**********    Detected Admissibility (testcase2)    **********/
     // run with -Y
 	while ( (m_read.load(mo_acquire) & 0xFFFF) != rd ) {
@@ -79,6 +115,9 @@ t_element * mpmc_boundq_1_alt<t_element>::write_prepare() {
 template <typename t_element>
 void mpmc_boundq_1_alt<t_element>::write_publish(t_element *bin)
 {
+    // XXX-injection-#8: Weaken the parameter "mo_release" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./mpmc-queue/testcase1 -m2 -y -u3 -tSPEC"
 	/**********    Detected Admissibility (testcase1)    **********/
 	m_written.fetch_add(1,mo_release);
 	/** @OPDefine: true */

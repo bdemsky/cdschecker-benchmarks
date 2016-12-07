@@ -12,6 +12,12 @@ typedef struct {
 typedef struct {
 	atomic_size_t top, bottom;
 	atomic_uintptr_t array; /* Atomic(Array *) */
+
+    // This is just used to mask the uninitialized loads in the known bugs to
+    // show that even without the CDSChecker's internal check, CDSSpec can
+    // also
+    // detects the known bug.
+    void *newArray;
 } Deque;
 
 Deque * create_size(int size);

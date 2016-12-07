@@ -53,6 +53,9 @@ int write_can_lock(rwlock_t *lock)
 void read_lock(rwlock_t *rw)
 {
 	
+	// XXX-injection-#1: Weaken the parameter "memory_order_acquire" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./linuxrwlocks/testcase1 -m2 -y -u3 -tSPEC"
 	/**********  Detected Correctness (testcase1) **********/
 	int priorvalue = atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
 	/** @OPDefine: priorvalue > 0 */
@@ -61,6 +64,9 @@ void read_lock(rwlock_t *rw)
 		while (atomic_load_explicit(&rw->lock, memory_order_relaxed) <= 0) {
 			thrd_yield();
 		}
+        // XXX-injection-#2: Weaken the parameter "memory_order_acquire" to
+        // "memory_order_relaxed", run "make" to recompile, and then run:
+        // "./run.sh ./linuxrwlocks/testcase1 -m2 -y -u3 -tSPEC"
 	    /**********  Detected Correctness (testcase1) **********/
 		priorvalue = atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
 		/** @OPDefine: priorvalue > 0 */
@@ -72,6 +78,9 @@ void read_lock(rwlock_t *rw)
 @Transition: STATE(writerLockAcquired) = true; */
 void write_lock(rwlock_t *rw)
 {
+    // XXX-injection-#3: Weaken the parameter "memory_order_acquire" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./linuxrwlocks/testcase1 -m2 -y -u3 -tSPEC"
 	/**********  Detected Correctness (testcase1) **********/
 	int priorvalue = atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
 	/** @OPDefine: priorvalue == RW_LOCK_BIAS */
@@ -80,6 +89,9 @@ void write_lock(rwlock_t *rw)
 		while (atomic_load_explicit(&rw->lock, memory_order_relaxed) != RW_LOCK_BIAS) {
 			thrd_yield();
 		}
+        // XXX-injection-#4: Weaken the parameter "memory_order_acquire" to
+        // "memory_order_relaxed", run "make" to recompile, and then run:
+        // "./run.sh ./linuxrwlocks/testcase1 -m2 -y -u3 -tSPEC"
 	    /**********  Detected Correctness (testcase1) **********/
 		priorvalue = atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
 		/** @OPDefine: priorvalue == RW_LOCK_BIAS */
@@ -90,6 +102,9 @@ void write_lock(rwlock_t *rw)
 @Transition: if (C_RET) STATE(readerLockCnt)++; */
 int read_trylock(rwlock_t *rw)
 {
+    // XXX-injection-#5: Weaken the parameter "memory_order_acquire" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./linuxrwlocks/testcase2 -m2 -y -u3 -tSPEC"
 	/**********  Detected Correctness (testcase2) **********/
 	int priorvalue = atomic_fetch_sub_explicit(&rw->lock, 1, memory_order_acquire);
 	/** @OPDefine: true */
@@ -104,6 +119,9 @@ int read_trylock(rwlock_t *rw)
 @Transition: if (C_RET) STATE(writerLockAcquired) = true; */
 int write_trylock(rwlock_t *rw)
 {
+    // XXX-injection-#6: Weaken the parameter "memory_order_acquire" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./linuxrwlocks/testcase2 -m2 -y -u3 -tSPEC"
 	/**********  Detected Correctness (testcase2) **********/
 	int priorvalue = atomic_fetch_sub_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_acquire);
 	/** @OPDefine: true */
@@ -118,6 +136,9 @@ int write_trylock(rwlock_t *rw)
 @Transition: STATE(readerLockCnt)--; */
 void read_unlock(rwlock_t *rw)
 {
+    // XXX-injection-#7: Weaken the parameter "memory_order_release" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./linuxrwlocks/testcase1 -m2 -y -u3 -tSPEC"
 	/**********  Detected Correctness (testcase1) **********/
 	atomic_fetch_add_explicit(&rw->lock, 1, memory_order_release);
 	/** @OPDefine: true */
@@ -127,6 +148,9 @@ void read_unlock(rwlock_t *rw)
 @Transition: STATE(writerLockAcquired) = false; */
 void write_unlock(rwlock_t *rw)
 {
+    // XXX-injection-#8: Weaken the parameter "memory_order_release" to
+    // "memory_order_relaxed", run "make" to recompile, and then run:
+    // "./run.sh ./linuxrwlocks/testcase1 -m2 -y -u3 -tSPEC"
 	/**********  Detected Correctness (testcase1) **********/
 	atomic_fetch_add_explicit(&rw->lock, RW_LOCK_BIAS, memory_order_release);
 	/** @OPDefine: true */
