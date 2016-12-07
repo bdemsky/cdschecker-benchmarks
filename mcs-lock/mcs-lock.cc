@@ -77,6 +77,7 @@ void mcs_mutex::unlock(guard * I) {
         // "memory_order_relaxed", run "make" to recompile, and then run:
         // "./run.sh ./mcs-lock/testcase -m2 -Y -u3 -tSPEC"
         /**********  Detected Correctness **********/
+        // This was mo_acq_rel, which is stronger than necessary
 		if ( m_tail.compare_exchange_strong(
 			tail_was_me,NULL,std::mo_release) ) {
 			// got null in tail, mutex is unlocked
