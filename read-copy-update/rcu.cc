@@ -18,14 +18,14 @@ void read(int *data1, int *data2) {
 	/**********    Detected Correctness **********/
 	Data *res = dataPtr.load(memory_order_acquire);
 	/** @OPDefine: true */
-	*data1 = res->data1;
-	*data2 = res->data2;
+	*data1 = res->data1.load(memory_order_relaxed);
+	*data2 = res->data2.load(memory_order_relaxed);
 	//load_32(&res->data1);
 }
 
 static void inc(Data *newPtr, Data *prev, int d1, int d2) {
-	newPtr->data1 = prev->data1 + d1;
-	newPtr->data2 = prev->data2 + d2;
+	newPtr->data1.store(prev->data1.load(memory_order_relaxed) + d1, memory_order_relaxed);
+	newPtr->data2.store(prev->data2.load(memory_order_relaxed) + d2, memory_order_relaxed);
 }
 
 /** @Transition: STATE(data1) += data1;

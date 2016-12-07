@@ -10,9 +10,10 @@
 #include "librace.h"
 
 struct Data {
-	/** Declare atomic just to expose them to CDSChecker */
-	int data1;
-	int data2;
+	// Declare atomic to expose them to CDSChecker.
+    // Otherwise, we might miss the data race reports.
+	atomic_int data1;
+	atomic_int data2;
 };
 
 
