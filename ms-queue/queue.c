@@ -172,7 +172,7 @@ void enqueue(queue_t *q, unsigned int val, int n)
     // "memory_order_release" to "memory_order_relaxed", run "make" to
     // recompile, and then run:
     // "./run.sh ./ms-queue/testcase1 -m2 -y -u3 -tSPEC"
-	/**********    Detected Corrctness (testcase1) **********/
+	/**********    Detected Correctness (testcase1) **********/
 	atomic_compare_exchange_strong_explicit(&q->tail,
 			&tail,
 			MAKE_POINTER(node, get_count(tail) + 1),
